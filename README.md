@@ -78,5 +78,6 @@ class m170812_175803_test extends \yii\db\Migration
     }
 }
 ```
-
-<img src="schema.png">
+<p align="center">
+    <img src="schema.png">
+</p>
