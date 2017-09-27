@@ -96,7 +96,7 @@ PivotTrait
 |Метод|Описание
 |------|---------
 |$company->addPivot($user, Employee::className(),$attributes = [])|Добавляем в таблицу Employee связку компания-пользователь
-|$company->getPivot($model, $pivotClass, $condition = [])|Получаем модель Employee для связки компания-пользователь
+|$company->getPivot($model, Employee::className(), $condition = [])|Получаем модель Employee для связки компания-пользователь
 |$company->deletePivot($model, Employee::className())|Удаляем связку компания-пользователь
 |$company->deletePivots(Employee::className())|Удаляем всех пользователей из Employee для этой компании
 

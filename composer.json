@@ -1,6 +1,7 @@
 {
   "name": "carono/yii2-migrate",
   "license": "MIT",
+  "description": "Trait to help create databases in migrations for Yii2",
   "authors": [
     {
       "name": "Aleksandr Kasyanov",
