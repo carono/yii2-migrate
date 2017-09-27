@@ -1,6 +1,6 @@
 Трейт для помощи в создании базы  
 
-`self::foreignKey($table)` - установка Foreign Key на поле
+`self::foreignKey($table)` - установка Foreign Key на поле  
 `self::pivot($table)` - создание сводной таблицы из 2х primary key
 
 ```php
