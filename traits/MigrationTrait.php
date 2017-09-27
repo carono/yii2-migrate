@@ -407,7 +407,7 @@ trait MigrationTrait
                 $fk->sourceColumn($columns[0]);
             }
 
-            $name = self::formIndexName($data[0], $columns, $unq ? "unq" : "idx");
+            $name = self::expandTablePrefix(self::formIndexName($data[0], $columns, $unq ? "unq" : "idx"));
             if ($revert) {
                 if ($fk) {
                     $fk->remove();
