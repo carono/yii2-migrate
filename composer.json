@@ -1,5 +1,6 @@
 {
   "name": "carono/yii2-migrate",
+  "license": "MIT",
   "authors": [
     {
       "name": "Aleksandr Kasyanov",
