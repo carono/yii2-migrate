@@ -495,7 +495,11 @@ trait MigrationTrait
     protected function getForeignKey($table, $column)
     {
         $condition = [':t' => $table, ':c' => $column];
-        return $this->db->createCommand('SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME=:t and COLUMN_NAME=:c', $condition)->queryScalar();
+        $sql = <<<SQL
+SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
+WHERE TABLE_NAME=:t and COLUMN_NAME=:c and CONSTRAINT_SCHEMA=database()
+SQL;
+        return $this->db->createCommand($sql, $condition)->queryScalar();
     }
 
     /**
@@ -505,7 +509,9 @@ trait MigrationTrait
     public function dropForeignKeyByColumn($table, $column)
     {
         $key = $this->getForeignKey($table, $column);
-        $this->dropForeignKey($key, $table);
+        if ($key) {
+            $this->dropForeignKey($key, $table);
+        }
     }
 
     /**
