@@ -15,6 +15,7 @@ class PivotColumn
     protected $_sourceColumn = null;
     protected $_name = null;
     protected $_tableName = null;
+    protected $_columns = [];
     /**
      * @var Migration
      */
@@ -59,6 +60,16 @@ class PivotColumn
     }
 
     /**
+     * @param array $columns
+     * @return $this
+     */
+    public function columns($columns)
+    {
+        $this->_columns = $columns;
+        return $this;
+    }
+
+    /**
      * @return mixed
      */
     public function getName()
@@ -69,6 +80,9 @@ class PivotColumn
 
     public function remove()
     {
+        if ($this->_columns) {
+            $this->migrate->downNewColumns([$this->getName() => $this->_columns]);
+        }
         $this->migrate->dropTable($this->getName());
     }
 
@@ -92,6 +106,9 @@ class PivotColumn
         } else {
             $this->migrate->createTable($this->getName(), $columns);
             $this->migrate->addPrimaryKey(null, $this->getName(), array_keys($columns));
+        }
+        if ($this->_columns) {
+            $this->migrate->upNewColumns([$this->getName() => $this->_columns]);
         }
     }
 

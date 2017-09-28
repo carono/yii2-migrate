@@ -54,11 +54,12 @@ trait MigrationTrait
      */
     public function createIndex($name, $table, $columns, $unique = false)
     {
-        $suffix = $unique ? "unq" : "idx";
         if (is_null($name)) {
+            $suffix = $unique ? "unq" : "idx";
             $name = self::formIndexName($table, $columns, $suffix);
+            $name = $this->expandTablePrefix($name);
+            $name = self::truncateName($name, 64, '_' . $suffix);
         }
-        $name = self::truncateName($name, 64, '_' . $suffix);
         return parent::createIndex($name, $table, $columns, $unique);
     }
 
@@ -208,8 +209,9 @@ trait MigrationTrait
     {
         if (is_null($name)) {
             $name = self::formFkName($table, $columns, $refTable, $refColumns);
+            $name = $this->expandTablePrefix($name);
+            $name = self::truncateName($name, 64, '_fk');
         }
-        $name = self::truncateName($name, 64, '_fk');
         return parent::addForeignKey($name, $table, $columns, $refTable, $refColumns, $delete, $update);
     }
 
@@ -254,8 +256,9 @@ trait MigrationTrait
     {
         if (is_null($name)) {
             $name = self::formIndexName($table, $columns, 'pk');
+            $name = $this->expandTablePrefix($name);
+            $name = self::truncateName($name, 64, '_pk');
         }
-        $name = self::truncateName($name, 64, '_pk');
         return parent::addPrimaryKey($name, $table, $columns);
     }
 
@@ -494,10 +497,21 @@ trait MigrationTrait
      */
     protected function getForeignKey($table, $column)
     {
-        $condition = [':t' => $table, ':c' => $column];
+        $condition = [':t' => $this->expandTablePrefix($table), ':c' => $column];
         $sql = <<<SQL
 SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
-WHERE TABLE_NAME=:t and COLUMN_NAME=:c and CONSTRAINT_SCHEMA=database()
+WHERE TABLE_NAME=:t AND COLUMN_NAME=:c AND CONSTRAINT_SCHEMA=DATABASE()
+SQL;
+        return $this->db->createCommand($sql, $condition)->queryScalar();
+    }
+
+    protected function getIndexName($table, $column)
+    {
+        $condition = [':t' => $this->expandTablePrefix($table), ':c' => $column];
+        $sql = <<<SQL
+SELECT DISTINCT INDEX_NAME
+FROM INFORMATION_SCHEMA.STATISTICS
+WHERE TABLE_NAME=:t AND COLUMN_NAME=:c AND TABLE_SCHEMA=DATABASE()
 SQL;
         return $this->db->createCommand($sql, $condition)->queryScalar();
     }
@@ -506,10 +520,20 @@ SQL;
      * @param $table
      * @param $column
      */
+    public function dropIndexByColumn($table, $column)
+    {
+        if ($key = $this->getIndexName($table, $column)) {
+            $this->dropIndex($key, $table);
+        }
+    }
+
+    /**
+     * @param $table
+     * @param $column
+     */
     public function dropForeignKeyByColumn($table, $column)
     {
-        $key = $this->getForeignKey($table, $column);
-        if ($key) {
+        if ($key = $this->getForeignKey($table, $column)) {
             $this->dropForeignKey($key, $table);
         }
     }
