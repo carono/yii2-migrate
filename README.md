@@ -1,4 +1,6 @@
-Трейт для помощи в создании базы  
+MigrationTrait   
+=================
+Трейт для помощи в создании базы
 
 |Метод|Описание
 |------|---------
@@ -81,3 +83,20 @@ class m170812_175803_test extends \yii\db\Migration
 <p align="center">
     <img src="schema.png">
 </p>
+
+PivotTrait
+==========
+Трейт для помощи работы со сводными таблицами  
+
+`$company` - модель таблицы Company (требуется трейт PivotTrait)  
+`$user` - модель таблицы User  
+`Employee` - сводная таблица двух моделей: компания-юзер  
+`Сводная таблица` - таблица, в которой находятся 2 primary key
+
+|Метод|Описание
+|------|---------
+|$company->addPivot($user, Employee::className(),$attributes = [])|Добавляем в таблицу Employee связку компания-пользователь
+|$company->getPivot($model, $pivotClass, $condition = [])|Получаем модель Employee для связки компания-пользователь
+|$company->deletePivot($model, Employee::className())|Удаляем связку компания-пользователь
+|$company->deletePivots(Employee::className())|Удаляем всех пользователей из Employee для этой компании
+
