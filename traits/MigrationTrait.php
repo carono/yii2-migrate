@@ -498,21 +498,37 @@ trait MigrationTrait
     protected function getForeignKey($table, $column)
     {
         $condition = [':t' => $this->expandTablePrefix($table), ':c' => $column];
-        $sql = <<<SQL
-SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
-WHERE TABLE_NAME=:t AND COLUMN_NAME=:c AND CONSTRAINT_SCHEMA=DATABASE()
-SQL;
+        $sql = "SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME=:t AND COLUMN_NAME=:c";
+        if ($this->db->driverName == 'mysql') {
+            $sql .= ' AND CONSTRAINT_SCHEMA=DATABASE()';
+        }
         return $this->db->createCommand($sql, $condition)->queryScalar();
     }
 
     protected function getIndexName($table, $column)
     {
         $condition = [':t' => $this->expandTablePrefix($table), ':c' => $column];
-        $sql = <<<SQL
-SELECT DISTINCT INDEX_NAME
-FROM INFORMATION_SCHEMA.STATISTICS
-WHERE TABLE_NAME=:t AND COLUMN_NAME=:c AND TABLE_SCHEMA=DATABASE()
+
+        if ($this->db->driverName == 'pgsql') {
+            $sql = <<<SQL
+SELECT
+	i.relname
+FROM
+	pg_class T,
+	pg_class i,
+	pg_index ix,
+	pg_attribute A
+WHERE
+	T .oid = ix.indrelid
+AND i.oid = ix.indexrelid
+AND A .attrelid = T .oid
+AND A .attnum = ANY (ix.indkey)
+AND T .relname = :t
+AND A .attname = :c
 SQL;
+        } else {
+            $sql = "SELECT DISTINCT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME=:t AND COLUMN_NAME=:c AND CONSTRAINT_SCHEMA=DATABASE()";
+        }
         return $this->db->createCommand($sql, $condition)->queryScalar();
     }
 
