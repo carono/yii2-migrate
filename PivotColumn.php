@@ -75,7 +75,7 @@ class PivotColumn
     public function getName()
     {
         $name = $this->_tableName ? $this->_tableName : join('_', ["pv", $this->_sourceTable, $this->_name]);
-        return $this->migrate->expandTablePrefix("{{%" . Migration::setTablePrefix($name, '') . "}}");
+        return "{{%" . Migration::setTablePrefix($name, '') . "}}";
     }
 
     public function remove()
