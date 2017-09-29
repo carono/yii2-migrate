@@ -54,12 +54,12 @@ trait MigrationTrait
      */
     public function createIndex($name, $table, $columns, $unique = false)
     {
+        $suffix = $unique ? "unq" : "idx";
         if (is_null($name)) {
-            $suffix = $unique ? "unq" : "idx";
             $name = self::formIndexName($table, $columns, $suffix);
             $name = $this->expandTablePrefix($name);
-            $name = self::truncateName($name, 64, '_' . $suffix);
         }
+        $name = self::truncateName($name, 64, '_' . $suffix);
         return parent::createIndex($name, $table, $columns, $unique);
     }
 
@@ -210,8 +210,8 @@ trait MigrationTrait
         if (is_null($name)) {
             $name = self::formFkName($table, $columns, $refTable, $refColumns);
             $name = $this->expandTablePrefix($name);
-            $name = self::truncateName($name, 64, '_fk');
         }
+        $name = self::truncateName($name, 64, '_fk');
         return parent::addForeignKey($name, $table, $columns, $refTable, $refColumns, $delete, $update);
     }
 
@@ -257,8 +257,8 @@ trait MigrationTrait
         if (is_null($name)) {
             $name = self::formIndexName($table, $columns, 'pk');
             $name = $this->expandTablePrefix($name);
-            $name = self::truncateName($name, 64, '_pk');
         }
+        $name = self::truncateName($name, 64, '_pk');
         return parent::addPrimaryKey($name, $table, $columns);
     }
 
