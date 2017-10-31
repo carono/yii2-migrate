@@ -307,7 +307,11 @@ trait PivotTrait
     private function getPkField($model, $pivotClass, $slave = false)
     {
         $modelTableName = self::getDb()->getTableSchema($model::tableName())->name;
+        $pk = self::getDb()->getTableSchema($pivotClass::tableName())->primaryKey;
         foreach (self::getDb()->getTableSchema($pivotClass::tableName())->foreignKeys as $fk) {
+            if (!in_array(current(array_filter(array_keys($fk))), $pk)) {
+                continue;
+            }
             if ($slave) {
                 if ($fk[0] != $modelTableName) {
                     unset($fk[0]);
