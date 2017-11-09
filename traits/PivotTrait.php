@@ -244,7 +244,7 @@ trait PivotTrait
             }
             return $find;
         } else {
-            $pv->setAttributes(array_merge($condition, $attributes));
+            $pv->setAttributes(array_merge($condition, $attributes), false);
             $pv->save();
             return $pv;
         }
