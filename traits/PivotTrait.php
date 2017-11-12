@@ -11,6 +11,7 @@ use yii\helpers\ArrayHelper;
  * Trait PivotTrait
  *
  * @package carono\yii2migrate\traits
+ * @mixin ActiveRecord
  */
 trait PivotTrait
 {
@@ -299,31 +300,35 @@ trait PivotTrait
     }
 
     /**
-     * @param $model
-     * @param $pivotClass
+     * @param $array
+     * @return array
+     */
+    private static function formFkKeys($array)
+    {
+        $result = [];
+        foreach ($array as $key => $data) {
+            $result[$key] = [
+                'table' => ArrayHelper::remove($data, 0),
+                'field' => key($data),
+                'reference' => current($data),
+            ];
+        }
+        return $result;
+    }
+
+    /**
+     * @param ActiveRecord $model
+     * @param ActiveRecord|string $pivotClass
      * @param bool $slave
      * @return int|null|string
      */
     private function getPkField($model, $pivotClass, $slave = false)
     {
-        $modelTableName = self::getDb()->getTableSchema($model::tableName())->name;
-        $pk = self::getDb()->getTableSchema($pivotClass::tableName())->primaryKey;
-        foreach (self::getDb()->getTableSchema($pivotClass::tableName())->foreignKeys as $fk) {
-            if (!in_array(current(array_filter(array_keys($fk))), $pk)) {
-                continue;
-            }
-            if ($slave) {
-                if ($fk[0] != $modelTableName) {
-                    unset($fk[0]);
-                    return key($fk);
-                }
-            } else {
-                if ($fk[0] == $modelTableName) {
-                    unset($fk[0]);
-                    return key($fk);
-                }
-            }
-        }
-        return null;
+        $pks = self::getDb()->getTableSchema($pivotClass::tableName())->primaryKey;
+        $fks = self::formFkKeys(self::getDb()->getTableSchema($pivotClass::tableName())->foreignKeys);
+        $fks = array_values(array_filter($fks, function ($data) use ($pks) {
+            return in_array($data['field'], $pks);
+        }));
+        return $slave ? $fks[1]['field'] : $fks[0]['field'];
     }
 }
