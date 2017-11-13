@@ -50,29 +50,6 @@ trait PivotTrait
         return $this->_storage;
     }
 
-//    /**
-//     * @param string|ActiveRecord $pivotClass
-//     * @param string $column
-//     * @param array $condition
-//     *
-//     * @return mixed
-//     */
-//    public function getPivotAttribute($pivotClass, $column, $condition = [])
-//    {
-//        /**
-//         * @var ActiveRecord $pv
-//         */
-//        if (is_numeric($condition)) {
-//            $pv = new $pivotClass;
-//            $mainPk = $this->getMainPkField($this, $pivotClass);
-//            $pk = $pv->primaryKey();
-//            $slavePk = current(array_diff($pk, [$mainPk]));
-//            $condition = [$slavePk => $condition];
-//        }
-//        $condition = array_merge($condition, [$this->getMainPkField($this, $pivotClass) => $this->getMainPk()]);
-//        return $pivotClass::find()->andWhere($condition)->select([$column])->scalar();
-//    }
-
     /**
      * @param ActiveRecord $model
      * @param string|ActiveRecord $pivotClass
@@ -97,7 +74,7 @@ trait PivotTrait
      */
     public function getPivot($model, $pivotClass, $condition = [])
     {
-        return $pivotClass::find()->andWhere($this->getPivotCondition($model, $pivotClass))->andWhere($condition)->one();
+        return $this->findPivot($model, $pivotClass)->andWhere($condition)->one();
     }
 
     /**
@@ -107,30 +84,27 @@ trait PivotTrait
      */
     public function getPivots($pivotClass, $condition = [])
     {
-        return $pivotClass::find()->andWhere($this->getPivotCondition(null, $pivotClass))->andWhere($condition)->all();
+        return $this->findPivots($pivotClass)->andWhere($condition)->all();
     }
 
-//    /**
-//     * @param string|ActiveRecord $pivotClass
-//     * @param              $value
-//     * @param null $column
-//     * @param array $condition
-//     */
-//    public function updatePivotAttribute($pivotClass, $model, $value, $column = null, $condition = [])
-//    {
-//        /**
-//         * @var ActiveRecord $pv
-//         */
-//        if (is_numeric($condition)) {
-//            $pv = new $pivotClass;
-//            $mainPk = $this->getMainPkField($pivotClass);
-//            $pk = $pv->primaryKey();
-//            $slavePk = current(array_diff($pk, [$mainPk]));
-//            $condition = [$slavePk => $condition];
-//        }
-//        $condition = array_merge($condition, [$this->getMainPkField($pivotClass) => $this->getMainPk()]);
-//        $pivotClass::updateAll([$column => $value], $condition);
-//    }
+    /**
+     * @param ActiveRecord $model
+     * @param string|ActiveRecord $pivotClass
+     * @return ActiveQuery
+     */
+    public function findPivot($model, $pivotClass)
+    {
+        return $pivotClass::find()->andWhere($this->getPivotCondition($model, $pivotClass));
+    }
+
+    /**
+     * @param string|ActiveRecord $pivotClass
+     * @return ActiveQuery
+     */
+    public function findPivots($pivotClass)
+    {
+        return $this->findPivot(null, $pivotClass);
+    }
 
     /**
      * @param string $pivotClass
@@ -197,25 +171,6 @@ trait PivotTrait
         }
     }
 
-//    /**
-//     * @param $pivotClass
-//     * @return mixed
-//     * @throws \Exception
-//     */
-//    private function getSlavePk($pivotClass)
-//    {
-//        /**
-//         * @var ActiveRecord $pv
-//         */
-//        $mainPk = $this->getMainPkField($pivotClass);
-//        $pv = new $pivotClass;
-//        $pk = $pv->primaryKey();
-//        if (!in_array($mainPk, $pk)) {
-//            throw  new \Exception("Fail found pk $mainPk in " . $pivotClass);
-//        }
-//        return current(array_diff($pk, [$mainPk]));
-//    }
-
     /**
      * @param $model
      * @param $pivotClass
@@ -229,19 +184,12 @@ trait PivotTrait
          * @var ActiveRecord $pv
          */
         $pv = new $pivotClass;
-        $mainPk = $this->getMainPkField($this, $pivotClass);
-        $pk = $pv->primaryKey();
-        if (!in_array($mainPk, $pk)) {
-            throw  new \Exception("Fail found pk $mainPk in " . $pivotClass);
-        }
-        $slavePk = current(array_diff($pk, [$mainPk]));
         $attributes = $attributes ? $attributes : $this->getStoragePivotAttribute($model, $pivotClass);
-        $condition = [];
-        $condition[$mainPk] = $this->getMainPk();
-        $condition[$slavePk] = $model->id;
+        $condition = $this->getPivotCondition($model, $pivotClass);
         if ($find = (new ActiveQuery($pivotClass))->andWhere($condition)->one()) {
             if ($attributes) {
-                $find->updateAttributes($attributes);
+                $find->setAttributes($attributes, false);
+                $find->save();
             }
             return $find;
         } else {
@@ -300,23 +248,6 @@ trait PivotTrait
     }
 
     /**
-     * @param $array
-     * @return array
-     */
-    private static function formFkKeys($array)
-    {
-        $result = [];
-        foreach ($array as $key => $data) {
-            $result[$key] = [
-                'table' => ArrayHelper::remove($data, 0),
-                'field' => key($data),
-                'reference' => current($data),
-            ];
-        }
-        return $result;
-    }
-
-    /**
      * @param ActiveRecord $model
      * @param ActiveRecord|string $pivotClass
      * @param bool $slave
@@ -324,11 +255,10 @@ trait PivotTrait
      */
     private function getPkField($model, $pivotClass, $slave = false)
     {
+        // TODO: на данный момент не могу определить, какое поле является главным в сводной таблице
+        // поэтому считаем, что первое по порядку - главное, второе - второстепенное
+
         $pks = self::getDb()->getTableSchema($pivotClass::tableName())->primaryKey;
-        $fks = self::formFkKeys(self::getDb()->getTableSchema($pivotClass::tableName())->foreignKeys);
-        $fks = array_values(array_filter($fks, function ($data) use ($pks) {
-            return in_array($data['field'], $pks);
-        }));
-        return $slave ? $fks[1]['field'] : $fks[0]['field'];
+        return $slave ? $pks[1] : $pks[0];
     }
 }
