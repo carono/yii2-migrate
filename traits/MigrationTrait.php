@@ -568,7 +568,7 @@ SQL;
     {
         if (strlen($name) > $length) {
             if (StringHelper::endsWith($name, $suffix)) {
-                $name = substr($name, 0, strlen($suffix));
+                $name = substr($name, 0, strlen($suffix) * -1);
             }
             return dechex(crc32($name)) . $suffix;
         } else {
