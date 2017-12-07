@@ -258,7 +258,56 @@ trait PivotTrait
         // TODO: на данный момент не могу определить, какое поле является главным в сводной таблице
         // поэтому считаем, что первое по порядку - главное, второе - второстепенное
 
+        if ($filed = $this->getPkFieldByModel($model, $pivotClass)) {
+            return $filed;
+        } else {
+            $pks = self::getDb()->getTableSchema($pivotClass::tableName())->primaryKey;
+            return $slave ? $pks[1] : $pks[0];
+        }
+    }
+
+    /**
+     * @param ActiveRecord $model
+     * @param ActiveRecord|string $pivotClass
+     * @return string
+     */
+    private function getPkFieldByModel($model, $pivotClass)
+    {
         $pks = self::getDb()->getTableSchema($pivotClass::tableName())->primaryKey;
-        return $slave ? $pks[1] : $pks[0];
+        $fks = self::formFkKeys(self::getDb()->getTableSchema($pivotClass::tableName())->foreignKeys);
+        $fks = array_values(array_filter($fks, function ($data) use ($pks) {
+            return in_array($data['field'], $pks);
+        }));
+
+        $table = preg_replace('#{{%([\w\d\-_]+)}}#', $model::getDb()->tablePrefix . "$1", $model::tableName());
+
+        $field = null;
+        foreach ($fks as $fk) {
+            if ($fk['table'] == $table) {
+                if ($field) {
+                    return null;
+                } else {
+                    $field = $fk['field'];
+                }
+            }
+        }
+        return $field;
+    }
+
+    /**
+     * @param $array
+     * @return array
+     */
+    private static function formFkKeys($array)
+    {
+        $result = [];
+        foreach ($array as $key => $data) {
+            $result[$key] = [
+                'table' => ArrayHelper::remove($data, 0),
+                'field' => key($data),
+                'reference' => current($data),
+            ];
+        }
+        return $result;
     }
 }
