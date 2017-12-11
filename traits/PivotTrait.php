@@ -51,16 +51,16 @@ trait PivotTrait
     }
 
     /**
-     * @param ActiveRecord $model
+     * @param ActiveRecord|null $model
      * @param string|ActiveRecord $pivotClass
      * @return array
      */
     private function getPivotCondition($model, $pivotClass)
     {
         $mainPk = $this->getPkField($this, $pivotClass);
-        $slavePk = $this->getSlavePkField($model, $pivotClass);
         $condition = [$mainPk => $this->getMainPk()];
         if (!is_null($model)) {
+            $slavePk = $this->getSlavePkField($model, $pivotClass);
             $condition[$slavePk] = $model->getAttribute($model->primaryKey()[0]);
         }
         return $condition;
