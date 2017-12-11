@@ -58,7 +58,7 @@ trait PivotTrait
     private function getPivotCondition($model, $pivotClass)
     {
         $mainPk = $this->getPkField($this, $pivotClass);
-        $slavePk = $this->getSlavePkField($this, $pivotClass);
+        $slavePk = $this->getSlavePkField($model, $pivotClass);
         $condition = [$mainPk => $this->getMainPk()];
         if (!is_null($model)) {
             $condition[$slavePk] = $model->getAttribute($model->primaryKey()[0]);
@@ -208,7 +208,7 @@ trait PivotTrait
     {
         return $pivotClass::deleteAll([
             $this->getMainPkField($this, $pivotClass) => $this->getMainPk(),
-            $this->getSlavePkField($this, $pivotClass) => $model->{$model->primaryKey()[0]}
+            $this->getSlavePkField($model, $pivotClass) => $model->{$model->primaryKey()[0]}
         ]);
     }
 
