@@ -16,5 +16,11 @@
     "psr-4": {
       "carono\\yii2migrate\\": ""
     }
-  }
+  },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://asset-packagist.org"
+    }
+  ]   
 }
