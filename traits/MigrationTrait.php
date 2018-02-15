@@ -238,7 +238,7 @@ trait MigrationTrait
     public function addColumn($table, $column, $type)
     {
         if ($type instanceof ForeignKeyColumn) {
-            parent::addColumn($table, $column, $this->integer());
+            parent::addColumn($table, $column, $type);
             $type->sourceTable($table);
             $type->sourceColumn($column);
             $type->apply();
