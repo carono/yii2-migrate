@@ -446,8 +446,18 @@ trait MigrationTrait
         }
     }
 
-    public static function formFkName($table, $column, $refTable, $refColumn)
+    public static function formFkName($table, $columns, $refTable, $refColumns)
     {
+        if (is_array($columns)) {
+            $column = join(',', $columns);
+        } else {
+            $column = $columns;
+        }
+        if (is_array($refColumns)) {
+            $refColumn = join(',', $refColumns);
+        } else {
+            $refColumn = $refColumns;
+        }
         $table = count(($t = explode('.', $table))) > 1 ? $t[1] : $t[0];
         $refTable = count(($t = explode('.', $refTable))) > 1 ? $t[1] : $t[0];
         return "{$table}[{$column}]_{$refTable}[{$refColumn}]_fk";
