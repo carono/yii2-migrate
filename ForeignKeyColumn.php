@@ -15,8 +15,8 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
     const FK_CASCADE = 'CASCADE';
     const FK_DEFAULT = 'SET DEFAULT';
     const FK_NULL = 'SET NULL';
-    public $_onDelete = self::FK_CASCADE;
-    public $_onUpdate = null;
+    protected $_onDelete = self::FK_CASCADE;
+    protected $_onUpdate = null;
     protected $_refTable = null;
     protected $_refColumn = null;
     protected $_sourceTable = null;
@@ -152,9 +152,12 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
         return $this->onDelete(self::FK_NULL);
     }
 
+    /**
+     * @return ForeignKeyColumn
+     */
     public function onDeleteDefault()
     {
-        $this->_onDelete = self::FK_DEFAULT;
+        return $this->onDelete(self::FK_DEFAULT);
     }
 
     /**
@@ -186,9 +189,9 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
         if (strpos($str, '.') !== false) {
             $arr = explode('.', $str);
             return $arr[1];
-        } else {
-            return $str;
         }
+
+        return $str;
     }
 
     /**
