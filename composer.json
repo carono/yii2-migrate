@@ -14,7 +14,7 @@
   },
   "autoload": {
     "psr-4": {
-      "carono\\yii2migrate\\": ""
+      "carono\\yii2migrate\\": "src"
     }
   },
   "repositories": [
@@ -22,5 +22,5 @@
       "type": "composer",
       "url": "https://asset-packagist.org"
     }
-  ]   
+  ]
 }

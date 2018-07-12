@@ -20,6 +20,7 @@ use yii\helpers\StringHelper;
  */
 trait MigrationTrait
 {
+    private static $tableOptions = '@tableOptions';
 
     /**
      * @param      $refTable
@@ -54,13 +55,13 @@ trait MigrationTrait
      */
     public function createIndex($name, $table, $columns, $unique = false)
     {
-        $suffix = $unique ? "unq" : "idx";
+        $suffix = $unique ? 'unq' : 'idx';
         if (is_null($name)) {
             $name = self::formIndexName($table, $columns, $suffix);
             $name = $this->expandTablePrefix($name);
         }
         $name = self::truncateName($name, 64, '_' . $suffix);
-        return parent::createIndex($name, $table, $columns, $unique);
+        parent::createIndex($name, $table, $columns, $unique);
     }
 
     /**
@@ -78,19 +79,19 @@ trait MigrationTrait
             return $this->primaryKey();
         }
         switch ($column->type) {
-            case "string":
+            case 'string':
                 $builder = $this->string($size);
                 break;
-            case "integer":
+            case 'integer':
                 $builder = $this->integer($size);
                 break;
-            case "datetime":
+            case 'datetime':
                 $builder = $this->dateTime($precision);
                 break;
-            case "text":
+            case 'text':
                 $builder = $this->text();
                 break;
-            case "smallint":
+            case 'smallint':
                 if ($size === 1) {
                     $default = (boolean)$default;
                     $builder = $this->boolean();
@@ -98,13 +99,13 @@ trait MigrationTrait
                     $builder = $this->smallInteger($size);
                 }
                 break;
-            case "binary":
+            case 'binary':
                 $builder = $this->binary()->defaultValue($default);
                 break;
-            case "decimal":
+            case 'decimal':
                 $builder = $this->decimal($precision, $scale);
                 break;
-            case "double":
+            case 'double':
                 $builder = $this->double($precision)->defaultValue($default);
                 break;
             default:
@@ -135,13 +136,14 @@ trait MigrationTrait
      */
     public static function setTablePrefix($name, $prefix)
     {
-        return preg_replace('#{{%([\w\d\-_]+)}}#', $prefix . "$1", $name);
+        return preg_replace('#{{%([\w\-_]+)}}#', $prefix . '$1', $name);
     }
 
     /**
      * @param string $table
      * @param array $columns
      * @param null $options
+     * @throws \Exception
      */
     public function createTable($table, $columns, $options = null)
     {
@@ -155,11 +157,16 @@ trait MigrationTrait
         $fks = [];
         $pks = [];
         foreach ($columns as $column => &$type) {
+            if ($column === self::$tableOptions && is_string($type)) {
+                $options = $type;
+                unset($columns[$column]);
+                continue;
+            }
             if ($type instanceof ColumnSchema) {
                 $column = is_numeric($column) ? $type->name : $column;
                 $type = $this->columnSchemaToBuilder($type);
             }
-            if ((string)$type == (string)$this->primaryKey()) {
+            if ((string)$type === (string)$this->primaryKey()) {
                 $pks[] = $column;
             }
             if ($type instanceof ForeignKeyColumn) {
@@ -193,7 +200,7 @@ trait MigrationTrait
         foreach ($pvs as $pv) {
             $pv->apply();
         }
-        echo " done (time: " . sprintf('%.3f', microtime(true) - $time) . "s)\n";
+        echo ' done (time: ' . sprintf('%.3f', microtime(true) - $time) . "s)\n";
     }
 
     /**
@@ -212,7 +219,7 @@ trait MigrationTrait
             $name = $this->expandTablePrefix($name);
         }
         $name = self::truncateName($name, 64, '_fk');
-        return parent::addForeignKey($name, $table, $columns, $refTable, $refColumns, $delete, $update);
+        parent::addForeignKey($name, $table, $columns, $refTable, $refColumns, $delete, $update);
     }
 
     /**
@@ -225,15 +232,12 @@ trait MigrationTrait
             $type->sourceColumn($column);
             $type->apply();
         } else {
-            return parent::alterColumn($table, $column, $type);
+            parent::alterColumn($table, $column, $type);
         }
     }
 
     /**
-     * @param string $table
-     * @param string $column
-     * @param string $type
-     * @return void
+     * @inheritdoc
      */
     public function addColumn($table, $column, $type)
     {
@@ -248,9 +252,7 @@ trait MigrationTrait
     }
 
     /**
-     * @param string $name
-     * @param string $table
-     * @param array|string $columns
+     * @inheritdoc
      */
     public function addPrimaryKey($name, $table, $columns)
     {
@@ -259,7 +261,7 @@ trait MigrationTrait
             $name = $this->expandTablePrefix($name);
         }
         $name = self::truncateName($name, 64, '_pk');
-        return parent::addPrimaryKey($name, $table, $columns);
+        parent::addPrimaryKey($name, $table, $columns);
     }
 
     /**
@@ -275,7 +277,7 @@ trait MigrationTrait
      */
     public function downNewColumns($array = [])
     {
-        $this->_applyNewColumns($array ? $array : $this->newColumns(), true);
+        $this->_applyNewColumns($array ?: $this->newColumns(), true);
     }
 
     /**
@@ -283,7 +285,7 @@ trait MigrationTrait
      */
     public function upNewColumns($array = [])
     {
-        $this->_applyNewColumns($array ? $array : $this->newColumns(), false);
+        $this->_applyNewColumns($array ?: $this->newColumns(), false);
     }
 
     /**
@@ -326,9 +328,7 @@ trait MigrationTrait
     }
 
     /**
-     * @param string $table
-     * @param string $column
-     * @param null $type
+     * @inheritdoc
      */
     public function dropColumn($table, $column, $type = null)
     {
@@ -354,7 +354,7 @@ trait MigrationTrait
      */
     public function upNewTables($array = [], $tableOptions = null)
     {
-        $this->_applyNewTables($array ? $array : $this->newTables(), false, $tableOptions);
+        $this->_applyNewTables($array ?: $this->newTables(), false, $tableOptions);
     }
 
     /**
@@ -362,7 +362,7 @@ trait MigrationTrait
      */
     public function upNewIndex($array = [])
     {
-        $this->_applyNewIndex($array ? $array : $this->newIndex());
+        $this->_applyNewIndex($array ?: $this->newIndex());
     }
 
     /**
@@ -370,7 +370,7 @@ trait MigrationTrait
      */
     public function downNewIndex($array = [])
     {
-        $this->_applyNewIndex($array ? $array : $this->newIndex(), true);
+        $this->_applyNewIndex($array ?: $this->newIndex(), true);
     }
 
     /**
@@ -386,7 +386,7 @@ trait MigrationTrait
      */
     public function downNewTables($array = [])
     {
-        $this->_applyNewTables($array ? $array : $this->newTables(), true);
+        $this->_applyNewTables($array ?: $this->newTables(), true);
     }
 
     /**
@@ -410,7 +410,7 @@ trait MigrationTrait
                 $fk->sourceColumn($columns[0]);
             }
 
-            $name = self::expandTablePrefix(self::formIndexName($data[0], $columns, $unq ? "unq" : "idx"));
+            $name = $this->expandTablePrefix(self::formIndexName($data[0], $columns, $unq ? 'unq' : 'idx'));
             if ($revert) {
                 if ($fk) {
                     $fk->remove();
@@ -427,6 +427,11 @@ trait MigrationTrait
         }
     }
 
+    /**
+     * @param $tables
+     * @param bool $revert
+     * @param null $tableOptions
+     */
     protected function _applyNewTables($tables, $revert = false, $tableOptions = null)
     {
         $tables = $revert ? array_reverse($tables) : $tables;
@@ -446,32 +451,51 @@ trait MigrationTrait
         }
     }
 
+    /**
+     * @param $table
+     * @param $columns
+     * @param $refTable
+     * @param $refColumns
+     * @return string
+     */
     public static function formFkName($table, $columns, $refTable, $refColumns)
     {
         if (is_array($columns)) {
-            $column = join(',', $columns);
+            $column = implode(',', $columns);
         } else {
             $column = $columns;
         }
         if (is_array($refColumns)) {
-            $refColumn = join(',', $refColumns);
+            $refColumn = implode(',', $refColumns);
         } else {
             $refColumn = $refColumns;
         }
-        $table = count(($t = explode('.', $table))) > 1 ? $t[1] : $t[0];
-        $refTable = count(($t = explode('.', $refTable))) > 1 ? $t[1] : $t[0];
+        $table = count($t = explode('.', $table)) > 1 ? $t[1] : $t[0];
+        $refTable = count($t = explode('.', $refTable)) > 1 ? $t[1] : $t[0];
         return "{$table}[{$column}]_{$refTable}[{$refColumn}]_fk";
     }
 
-    public static function formPkIndexName($table, $columns, $suffix = "pk")
+    /**
+     * @param $table
+     * @param $columns
+     * @param string $suffix
+     * @return string
+     */
+    public static function formPkIndexName($table, $columns, $suffix = 'pk')
     {
         return self::formIndexName($table, $columns, $suffix);
     }
 
-    public static function formIndexName($table, $columns, $suffix = "idx")
+    /**
+     * @param $table
+     * @param $columns
+     * @param string $suffix
+     * @return string
+     */
+    public static function formIndexName($table, $columns, $suffix = 'idx')
     {
         $table = self::removeSchema($table);
-        $column = join(':', array_map('trim', (array)$columns));
+        $column = implode(':', array_map('trim', (array)$columns));
         return "{$table}:{$column}_$suffix";
     }
 
@@ -479,8 +503,8 @@ trait MigrationTrait
     {
         $c = $idStart;
         foreach ($rows as $row) {
-            if (!isset($row["id"]) && !is_null($idStart)) {
-                $row += ["id" => $c++];
+            if (!isset($row['id']) && !is_null($idStart)) {
+                $row += ['id' => $c++];
             }
             $this->insert($table, $row);
         }
@@ -495,21 +519,22 @@ trait MigrationTrait
         if (strpos($str, '.') !== false) {
             $arr = explode('.', $str);
             return $arr[1];
-        } else {
-            return $str;
         }
+
+        return $str;
     }
 
     /**
      * @param $table
      * @param $column
      * @return false|null|string
+     * @throws \yii\db\Exception
      */
     protected function getForeignKey($table, $column)
     {
         $condition = [':t' => $this->expandTablePrefix($table), ':c' => $column];
-        $sql = "SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME=:t AND COLUMN_NAME=:c";
-        if ($this->db->driverName == 'mysql') {
+        $sql = 'SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME=:t AND COLUMN_NAME=:c';
+        if ($this->db->driverName === 'mysql') {
             $sql .= ' AND CONSTRAINT_SCHEMA=DATABASE()';
         }
         return $this->db->createCommand($sql, $condition)->queryScalar();
@@ -519,7 +544,7 @@ trait MigrationTrait
     {
         $condition = [':t' => $this->expandTablePrefix($table), ':c' => $column];
 
-        if ($this->db->driverName == 'pgsql') {
+        if ($this->db->driverName === 'pgsql') {
             $sql = <<<SQL
 SELECT
 	i.relname
@@ -537,7 +562,7 @@ AND T .relname = :t
 AND A .attname = :c
 SQL;
         } else {
-            $sql = "SELECT DISTINCT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME=:t AND COLUMN_NAME=:c AND CONSTRAINT_SCHEMA=DATABASE()";
+            $sql = 'SELECT DISTINCT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME=:t AND COLUMN_NAME=:c AND CONSTRAINT_SCHEMA=DATABASE()';
         }
         return $this->db->createCommand($sql, $condition)->queryScalar();
     }
@@ -556,6 +581,7 @@ SQL;
     /**
      * @param $table
      * @param $column
+     * @throws \yii\db\Exception
      */
     public function dropForeignKeyByColumn($table, $column)
     {
@@ -572,7 +598,7 @@ SQL;
      * @param $name
      * @param int $length
      * @param null $suffix
-     * @return bool|string
+     * @return string
      */
     public static function truncateName($name, $length = 64, $suffix = null)
     {
@@ -581,8 +607,8 @@ SQL;
                 $name = substr($name, 0, strlen($suffix) * -1);
             }
             return dechex(crc32($name)) . $suffix;
-        } else {
-            return $name;
         }
+
+        return $name;
     }
 }

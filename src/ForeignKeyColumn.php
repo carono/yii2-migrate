@@ -63,7 +63,7 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
 
     public function apply()
     {
-        return $this->migrate->addForeignKey(
+        $this->migrate->addForeignKey(
             $this->getName(), $this->getSourceTable(), $this->getSourceColumn(), $this->getRefTable(),
             $this->getRefColumn(), $this->getOnDelete(), $this->getOnUpdate()
         );

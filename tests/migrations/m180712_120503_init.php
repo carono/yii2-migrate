@@ -1,17 +1,3 @@
-MigrationTrait   
-=================
-Трейт для помощи в создании базы
-
-|Метод|Описание
-|------|---------
-|self::foreignKey($table)|установка Foreign Key на поле  
-|self::pivot($table)|создание сводной таблицы из 2х primary key
-|dropIndexByColumn('{{%user}}', 'name')|Удаление индекса по столбцу
-|dropForeignKeyByColumn('{{%photo}}', 'user_id')|Удаление FK по столбцу
-|createIndex(null, '{{%user}}', 'name')|Создание индекса с автоматическим именем
-
-
-```php
 <?php
 
 use yii\db\Migration;
@@ -90,24 +76,3 @@ class m180712_120503_init extends Migration
         $this->downNewTables();
     }
 }
-```
-<p align="center">
-    <img src="schema.png">
-</p>
-
-PivotTrait
-==========
-Трейт для помощи работы со сводными таблицами  
-
-`$company` - модель таблицы Company (требуется трейт PivotTrait)  
-`$user` - модель таблицы User  
-`Employee` - сводная таблица двух моделей: компания-юзер  
-`Сводная таблица` - таблица, в которой находятся 2 primary key
-
-|Метод|Описание
-|------|---------
-|$company->addPivot($user, Employee::className(),$attributes = [])|Добавляем в таблицу Employee связку компания-пользователь
-|$company->getPivot($model, Employee::className(), $condition = [])|Получаем модель Employee для связки компания-пользователь
-|$company->deletePivot($model, Employee::className())|Удаляем связку компания-пользователь
-|$company->deletePivots(Employee::className())|Удаляем всех пользователей из Employee для этой компании
-
