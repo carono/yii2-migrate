@@ -4,6 +4,7 @@
 namespace carono\yii2migrate\traits;
 
 use carono\yii2migrate\ForeignKeyColumn;
+use carono\yii2migrate\IndexColumn;
 use carono\yii2migrate\PivotColumn;
 use yii\db\ColumnSchema;
 use yii\db\ColumnSchemaBuilder;
@@ -35,6 +36,15 @@ trait MigrationTrait
         return (new ForeignKeyColumn($type, $length))->refTable($refTable)->refColumn($refColumn)->setMigrate($this);
     }
 
+    /**
+     * @param array $columns
+     * @param bool $isUnique
+     * @return IndexColumn
+     */
+    public function index($columns = [], $isUnique = false)
+    {
+        return (new IndexColumn())->setMigrate($this)->columns($columns)->unique($isUnique);
+    }
 
     /**
      * @param null $refTable
@@ -396,33 +406,36 @@ trait MigrationTrait
     protected function _applyNewIndex($indexes, $revert = false)
     {
         /**
-         * @var ForeignKeyColumn $fk
+         * @var IndexColumn $index
          */
         $indexes = $revert ? array_reverse($indexes) : $indexes;
         foreach ($indexes as $key => $data) {
-            $unq = isset($data[2]) && $data[2];
-            $columns = is_array($data[1]) ? $data[1] : explode(',', $data[1]);
-            $table = $data[0];
-            $fk = null;
-            if (isset($data[2]) && $data[2] instanceof ForeignKeyColumn) {
-                $fk = $data[2];
-                $fk->sourceTable($table);
-                $fk->sourceColumn($columns[0]);
+            if (!is_numeric($key)) {
+                foreach ($data as $index) {
+                    if ($index instanceof IndexColumn) {
+                        $index->table($key);
+                        if ($revert) {
+                            $index->remove();
+                        } else {
+                            $index->apply();
+                        }
+                    }
+                }
+                continue;
             }
 
-            $name = $this->expandTablePrefix(self::formIndexName($data[0], $columns, $unq ? 'unq' : 'idx'));
-            if ($revert) {
-                if ($fk) {
-                    $fk->remove();
-                } else {
-                    $this->dropIndex($name, $data[0]);
-                }
+            if (!$data instanceof IndexColumn) {
+                $unq = isset($data[2]) && $data[2];
+                $columns = is_array($data[1]) ? $data[1] : explode(',', $data[1]);
+                $index = $this->index($columns, $unq)->table($data[0]);
             } else {
-                if ($fk) {
-                    $fk->apply();
-                } else {
-                    $this->createIndex($name, $data[0], join(',', $columns), $unq);
-                }
+                $index = $data;
+            }
+
+            if ($revert) {
+                $index->remove();
+            } else {
+                $index->apply();
             }
         }
     }
@@ -499,6 +512,13 @@ trait MigrationTrait
         return "{$table}:{$column}_$suffix";
     }
 
+    /**
+     * @param $table
+     * @param $rows
+     * @param int $idStart
+     * @param string $updateSeq
+     * @deprecated
+     */
     public function insertTo($table, $rows, $idStart = 1, $updateSeq = 'id')
     {
         $c = $idStart;
@@ -540,6 +560,14 @@ trait MigrationTrait
         return $this->db->createCommand($sql, $condition)->queryScalar();
     }
 
+    /**
+     * @TODO https://stackoverflow.com/questions/6777456/list-all-index-names-column-names-and-its-table-name-of-a-postgresql-database
+     * @unstable
+     *
+     * @param $table
+     * @param $column
+     * @return false|null|string
+     */
     protected function getIndexName($table, $column)
     {
         $condition = [':t' => $this->expandTablePrefix($table), ':c' => $column];
