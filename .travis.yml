@@ -1,0 +1,32 @@
+language: php
+
+php:
+  - 7.1
+  - 7.0
+  - 5.6
+
+# environment variable used in test suite
+env: TEST_ENVIRONMENT=travis
+dist: precise
+
+# faster builds on new travis setup not using sudo
+sudo: false
+
+# cache vendor dirs
+cache:
+  directories:
+    - vendor
+    - $HOME/.composer/cache
+
+# install dependencies
+install:
+  - travis_retry composer self-update
+  - travis_retry composer global require "codeception/codeception"
+  - travis_retry composer install --prefer-dist
+
+before_script:
+  - mysql -e 'create database test;'
+  - ~/.composer/vendor/bin/codecept build
+
+script:
+  - ~/.composer/vendor/bin/codecept run --env mysql

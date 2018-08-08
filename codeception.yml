@@ -1,0 +1,28 @@
+actor: Tester
+paths:
+  tests: tests
+  log: tests/output
+  data: tests/data
+  helpers: tests/support
+settings:
+  bootstrap: bootstrap.php
+  colors: false
+  memory_limit: 1024M
+coverage:
+  enabled: true
+    - src/*
+modules:
+  config:
+    Yii2:
+      configFile: 'tests/app/config/test-mysql.php'
+env:
+  pgsql:
+    modules:
+      config:
+        Yii2:
+          configFile: 'tests/app/config/test-pgsql.php'
+  mysql:
+    modules:
+      config:
+        Yii2:
+          configFile: 'tests/app/config/test-mysql.php'

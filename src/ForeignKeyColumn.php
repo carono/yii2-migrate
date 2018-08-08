@@ -3,6 +3,7 @@
 namespace carono\yii2migrate;
 
 
+use carono\yii2migrate\helpers\SchemaHelper;
 use yii\db\ColumnSchemaBuilder;
 
 /**
@@ -15,12 +16,15 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
     const FK_CASCADE = 'CASCADE';
     const FK_DEFAULT = 'SET DEFAULT';
     const FK_NULL = 'SET NULL';
+    const FK_RESTRICT = 'RESTRICT';
+    const FK_NO_ACTION = 'NO ACTION';
+
     protected $_onDelete = self::FK_CASCADE;
-    protected $_onUpdate = null;
-    protected $_refTable = null;
-    protected $_refColumn = null;
-    protected $_sourceTable = null;
-    protected $_sourceColumn = null;
+    protected $_onUpdate;
+    protected $_refTable;
+    protected $_refColumn;
+    protected $_sourceTable;
+    protected $_sourceColumn;
     protected $_name;
     /**
      * @var Migration
@@ -34,6 +38,7 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
     public function setMigrate($migrate)
     {
         $this->migrate = $migrate;
+        $this->db = $migrate->db;
         return $this;
     }
 
@@ -52,10 +57,15 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
      */
     public function getName()
     {
+        return $this->_name;
+    }
+
+    public function formIndexName()
+    {
         if ($this->_name) {
             $name = $this->_name;
         } else {
-            $name = self::formName($this->getSourceTable(), $this->getSourceColumn(), $this->getRefTable(), $this->getRefColumn());
+            $name = $this->formName($this->getSourceTable(), $this->getSourceColumn(), $this->getRefTable(), $this->getRefColumn());
         }
         $name = $this->migrate->expandTablePrefix($name);
         return $name;
@@ -82,14 +92,18 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
         return $this->_refTable;
     }
 
+    protected function getRefColumnByTable($table)
+    {
+        return current($this->migrate->db->getTableSchema($table)->primaryKey);
+    }
+
     /**
      * @return null|string
      */
     public function getRefColumn()
     {
         if (!$this->_refColumn && $this->migrate) {
-            $pk = $this->migrate->db->getTableSchema($this->getRefTable())->primaryKey;
-            $this->refColumn(current($pk));
+            $this->_refColumn = $this->getRefColumnByTable($this->getRefTable());
         }
         return $this->_refColumn;
     }
@@ -137,6 +151,16 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
     }
 
     /**
+     * @param $string
+     * @return $this
+     */
+    public function onUpdate($string)
+    {
+        $this->_onUpdate = $string;
+        return $this;
+    }
+
+    /**
      * @return ForeignKeyColumn
      */
     public function onDeleteCascade()
@@ -161,6 +185,62 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
     }
 
     /**
+     * @return ForeignKeyColumn
+     */
+    public function onDeleteRestrict()
+    {
+        return $this->onDelete(self::FK_RESTRICT);
+    }
+
+    /**
+     * @return ForeignKeyColumn
+     */
+    public function onDeleteNoAction()
+    {
+        return $this->onDelete(self::FK_NO_ACTION);
+    }
+
+    /**
+     * @return ForeignKeyColumn
+     */
+    public function onUpdateCascade()
+    {
+        return $this->onUpdate(self::FK_CASCADE);
+    }
+
+    /**
+     * @return ForeignKeyColumn
+     */
+    public function onUpdateNull()
+    {
+        return $this->onUpdate(self::FK_NULL);
+    }
+
+    /**
+     * @return ForeignKeyColumn
+     */
+    public function onUpdateDefault()
+    {
+        return $this->onUpdate(self::FK_DEFAULT);
+    }
+
+    /**
+     * @return ForeignKeyColumn
+     */
+    public function onUpdateRestrict()
+    {
+        return $this->onUpdate(self::FK_RESTRICT);
+    }
+
+    /**
+     * @return ForeignKeyColumn
+     */
+    public function onUpdateNoAction()
+    {
+        return $this->onUpdate(self::FK_NO_ACTION);
+    }
+
+    /**
      * @param $name
      * @return $this
      */
@@ -181,30 +261,16 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
     }
 
     /**
-     * @param $str
-     * @return mixed
-     */
-    private static function removeSchema($str)
-    {
-        if (strpos($str, '.') !== false) {
-            $arr = explode('.', $str);
-            return $arr[1];
-        }
-
-        return $str;
-    }
-
-    /**
      * @param $table
      * @param $column
      * @param $refTable
      * @param $refColumn
      * @return string
      */
-    public static function formName($table, $column, $refTable, $refColumn)
+    public function formName($table, $column, $refTable, $refColumn)
     {
-        $table = self::removeSchema($table);
-        $refTable = self::removeSchema($refTable);
+        $table = SchemaHelper::removeSchema($this->migrate->expandTablePrefix($table));
+        $refTable = SchemaHelper::removeSchema($this->migrate->expandTablePrefix($refTable));
         return "{$table}[{$column}]_{$refTable}[{$refColumn}]_fk";
     }
 

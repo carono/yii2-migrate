@@ -4,6 +4,7 @@
 namespace carono\yii2migrate\traits;
 
 use carono\yii2migrate\ForeignKeyColumn;
+use carono\yii2migrate\helpers\SchemaHelper;
 use carono\yii2migrate\IndexColumn;
 use carono\yii2migrate\PivotColumn;
 use yii\db\ColumnSchema;
@@ -58,6 +59,14 @@ trait MigrationTrait
     }
 
     /**
+     * @return array
+     */
+    public function tableOptions()
+    {
+        return [];
+    }
+
+    /**
      * @param string $name
      * @param string $table
      * @param array|string $columns
@@ -65,12 +74,12 @@ trait MigrationTrait
      */
     public function createIndex($name, $table, $columns, $unique = false)
     {
-        $suffix = $unique ? 'unq' : 'idx';
-        if (is_null($name)) {
-            $name = self::formIndexName($table, $columns, $suffix);
+        $suffix = $unique ? '_unq' : '_idx';
+        if ($name === null) {
+            $name = self::formIndexName($table, $columns, $suffix, $this->db->tablePrefix);
             $name = $this->expandTablePrefix($name);
         }
-        $name = self::truncateName($name, 64, '_' . $suffix);
+        $name = SchemaHelper::truncateIndexName($name, 64, $suffix);
         parent::createIndex($name, $table, $columns, $unique);
     }
 
@@ -135,18 +144,7 @@ trait MigrationTrait
      */
     public function expandTablePrefix($name)
     {
-        return self::setTablePrefix($name, $this->db->tablePrefix);
-    }
-
-    /**
-     * @param $name
-     * @param $prefix
-     * @return mixed
-     * @internal param $prefix
-     */
-    public static function setTablePrefix($name, $prefix)
-    {
-        return preg_replace('#{{%([\w\-_]+)}}#', $prefix . '$1', $name);
+        return SchemaHelper::expandTablePrefix($name, $this->db->tablePrefix);
     }
 
     /**
@@ -166,12 +164,11 @@ trait MigrationTrait
         $pvs = [];
         $fks = [];
         $pks = [];
+
+        $options = $this->getTableOptionsFromArray(ArrayHelper::remove($columns, self::$tableOptions, []), $options);
+
         foreach ($columns as $column => &$type) {
-            if ($column === self::$tableOptions && is_string($type)) {
-                $options = $type;
-                unset($columns[$column]);
-                continue;
-            }
+
             if ($type instanceof ColumnSchema) {
                 $column = is_numeric($column) ? $type->name : $column;
                 $type = $this->columnSchemaToBuilder($type);
@@ -201,13 +198,25 @@ trait MigrationTrait
                 $this->db->createCommand()->addCommentOnColumn($table, $column, $type->comment)->execute();
             }
         }
+        if ($fks) {
+            echo "\n";
+        }
         foreach ($fks as $fk) {
+            echo '  ';
             $fk->apply();
         }
+        if ($fks) {
+            echo "\n";
+        }
         if (count($pks) > 1) {
+            echo '  ';
             $this->addPrimaryKey(null, $table, $pks);
         }
+        if ($pvs) {
+            echo "\n";
+        }
         foreach ($pvs as $pv) {
+            echo '  ';
             $pv->apply();
         }
         echo ' done (time: ' . sprintf('%.3f', microtime(true) - $time) . "s)\n";
@@ -224,11 +233,11 @@ trait MigrationTrait
      */
     public function addForeignKey($name, $table, $columns, $refTable, $refColumns, $delete = null, $update = null)
     {
-        if (is_null($name)) {
-            $name = self::formFkName($table, $columns, $refTable, $refColumns);
+        if ($name === null) {
+            $name = $this->formFkName($table, $columns, $refTable, $refColumns);
             $name = $this->expandTablePrefix($name);
         }
-        $name = self::truncateName($name, 64, '_fk');
+        $name = SchemaHelper::truncateIndexName($name, 64, '_fk');
         parent::addForeignKey($name, $table, $columns, $refTable, $refColumns, $delete, $update);
     }
 
@@ -266,11 +275,11 @@ trait MigrationTrait
      */
     public function addPrimaryKey($name, $table, $columns)
     {
-        if (is_null($name)) {
+        if ($name === null) {
             $name = self::formIndexName($table, $columns, 'pk');
             $name = $this->expandTablePrefix($name);
         }
-        $name = self::truncateName($name, 64, '_pk');
+        $name = SchemaHelper::truncateIndexName($name, 64, '_pk');
         parent::addPrimaryKey($name, $table, $columns);
     }
 
@@ -326,7 +335,7 @@ trait MigrationTrait
                     $column[2]->remove();
                     continue;
                 }
-                $this->dropColumn($column[0], $column[1], $column[2]);
+                $this->dropColumn($column[0], $column[1]);
             } else {
                 if ($column[2] instanceof PivotColumn) {
                     $column[2]->apply();
@@ -340,12 +349,13 @@ trait MigrationTrait
     /**
      * @inheritdoc
      */
-    public function dropColumn($table, $column, $type = null)
+    public function dropColumn($table, $column)
     {
-        if ($type instanceof ForeignKeyColumn) {
-            $type->sourceTable($table);
-            $type->sourceColumn($column);
-            $type->remove();
+        $foreignKeys = SchemaHelper::findTableForeignKeys($this->db, $table);
+        foreach ($foreignKeys as $key => $foreignKey) {
+            if ($foreignKey->columnNames === [$column]) {
+                $this->dropForeignKey($key, $table);
+            }
         }
         return parent::dropColumn($table, $column);
     }
@@ -424,13 +434,10 @@ trait MigrationTrait
                 continue;
             }
 
-            if (!$data instanceof IndexColumn) {
-                $unq = isset($data[2]) && $data[2];
-                $columns = is_array($data[1]) ? $data[1] : explode(',', $data[1]);
-                $index = $this->index($columns, $unq)->table($data[0]);
-            } else {
-                $index = $data;
-            }
+            // Old style
+            $unq = isset($data[2]) && $data[2];
+            $columns = is_array($data[1]) ? $data[1] : explode(',', $data[1]);
+            $index = $this->index($columns, $unq)->table($data[0]);
 
             if ($revert) {
                 $index->remove();
@@ -438,6 +445,32 @@ trait MigrationTrait
                 $index->apply();
             }
         }
+    }
+
+    /**
+     * @param array|string $items
+     * @param string|array $default
+     * @return array|mixed|string
+     */
+    private function getTableOptionsFromArray($items, $default = '')
+    {
+        if (is_array($default)) {
+            $default = ArrayHelper::getValue($default, $this->db->driverName, '');
+        }
+
+        if (!$default) {
+            $default = ArrayHelper::getValue($this->tableOptions(), $this->db->driverName, '');
+        }
+
+        if (is_array($items)) {
+            return ArrayHelper::getValue($items, $this->db->driverName, $default);
+        }
+
+        if ($items && is_string($items)) {
+            return $items;
+        }
+
+        return $default;
     }
 
     /**
@@ -458,7 +491,6 @@ trait MigrationTrait
                 }
                 $this->dropTable($table);
             } else {
-                $tableOptions = ArrayHelper::remove($columns, 'tableOptions', $tableOptions);
                 $this->createTable($table, $columns, $tableOptions);
             }
         }
@@ -471,128 +503,36 @@ trait MigrationTrait
      * @param $refColumns
      * @return string
      */
-    public static function formFkName($table, $columns, $refTable, $refColumns)
+    public function formFkName($table, $columns, $refTable, $refColumns)
     {
-        if (is_array($columns)) {
-            $column = implode(',', $columns);
-        } else {
-            $column = $columns;
-        }
-        if (is_array($refColumns)) {
-            $refColumn = implode(',', $refColumns);
-        } else {
-            $refColumn = $refColumns;
-        }
-        $table = count($t = explode('.', $table)) > 1 ? $t[1] : $t[0];
-        $refTable = count($t = explode('.', $refTable)) > 1 ? $t[1] : $t[0];
-        return "{$table}[{$column}]_{$refTable}[{$refColumn}]_fk";
+        return $this->foreignKey($refTable, $refColumns)->sourceTable($table)->sourceColumn($columns)->formIndexName();
     }
 
     /**
      * @param $table
      * @param $columns
      * @param string $suffix
+     * @param string $tablePrefix
      * @return string
      */
-    public static function formPkIndexName($table, $columns, $suffix = 'pk')
+    public static function formPkIndexName($table, $columns, $suffix = '_pk', $tablePrefix = '')
     {
-        return self::formIndexName($table, $columns, $suffix);
+        return self::formIndexName($table, $columns, $suffix, $tablePrefix);
     }
 
     /**
      * @param $table
      * @param $columns
      * @param string $suffix
+     * @param string $tablePrefix
      * @return string
      */
-    public static function formIndexName($table, $columns, $suffix = 'idx')
+    public static function formIndexName($table, $columns, $suffix = '_idx', $tablePrefix = '')
     {
-        $table = self::removeSchema($table);
+        $table = SchemaHelper::expandTablePrefix($table, $tablePrefix);
+        $table = SchemaHelper::removeSchema($table);
         $column = implode(':', array_map('trim', (array)$columns));
-        return "{$table}:{$column}_$suffix";
-    }
-
-    /**
-     * @param $table
-     * @param $rows
-     * @param int $idStart
-     * @param string $updateSeq
-     * @deprecated
-     */
-    public function insertTo($table, $rows, $idStart = 1, $updateSeq = 'id')
-    {
-        $c = $idStart;
-        foreach ($rows as $row) {
-            if (!isset($row['id']) && !is_null($idStart)) {
-                $row += ['id' => $c++];
-            }
-            $this->insert($table, $row);
-        }
-        if ($updateSeq) {
-            $c = (int)\Yii::$app->db->createCommand("SELECT count(*) FROM {{$table}}")->queryScalar() + 1;
-            $this->execute("ALTER SEQUENCE {$table}_{$updateSeq}_seq RESTART WITH $c;");
-        }
-    }
-
-    public static function removeSchema($str)
-    {
-        if (strpos($str, '.') !== false) {
-            $arr = explode('.', $str);
-            return $arr[1];
-        }
-
-        return $str;
-    }
-
-    /**
-     * @param $table
-     * @param $column
-     * @return false|null|string
-     * @throws \yii\db\Exception
-     */
-    protected function getForeignKey($table, $column)
-    {
-        $condition = [':t' => $this->expandTablePrefix($table), ':c' => $column];
-        $sql = 'SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME=:t AND COLUMN_NAME=:c';
-        if ($this->db->driverName === 'mysql') {
-            $sql .= ' AND CONSTRAINT_SCHEMA=DATABASE()';
-        }
-        return $this->db->createCommand($sql, $condition)->queryScalar();
-    }
-
-    /**
-     * @TODO https://stackoverflow.com/questions/6777456/list-all-index-names-column-names-and-its-table-name-of-a-postgresql-database
-     * @unstable
-     *
-     * @param $table
-     * @param $column
-     * @return false|null|string
-     */
-    protected function getIndexName($table, $column)
-    {
-        $condition = [':t' => $this->expandTablePrefix($table), ':c' => $column];
-
-        if ($this->db->driverName === 'pgsql') {
-            $sql = <<<SQL
-SELECT
-	i.relname
-FROM
-	pg_class T,
-	pg_class i,
-	pg_index ix,
-	pg_attribute A
-WHERE
-	T .oid = ix.indrelid
-AND i.oid = ix.indexrelid
-AND A .attrelid = T .oid
-AND A .attnum = ANY (ix.indkey)
-AND T .relname = :t
-AND A .attname = :c
-SQL;
-        } else {
-            $sql = 'SELECT DISTINCT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME=:t AND COLUMN_NAME=:c AND CONSTRAINT_SCHEMA=DATABASE()';
-        }
-        return $this->db->createCommand($sql, $condition)->queryScalar();
+        return "{$table}:{$column}$suffix";
     }
 
     /**
@@ -601,8 +541,13 @@ SQL;
      */
     public function dropIndexByColumn($table, $column)
     {
-        if ($key = $this->getIndexName($table, $column)) {
-            $this->dropIndex($key, $table);
+        /**
+         * @var \yii\db\IndexConstraint $index
+         */
+        foreach (SchemaHelper::findNonUniqueIndexes($this->db, $this->expandTablePrefix($table)) as $index) {
+            if ($index->columnNames === (array)$column) {
+                $this->dropIndex($index->name, $table);
+            }
         }
     }
 
@@ -613,30 +558,10 @@ SQL;
      */
     public function dropForeignKeyByColumn($table, $column)
     {
-        if ($key = $this->getForeignKey($table, $column)) {
-            $this->dropForeignKey($key, $table);
-        }
-    }
-
-    /**
-     * Принудительно обрезаем названия ключей, если они получаются больше чем $length, т.к. базы могут вылететь с ошибкой
-     *
-     * @see https://dev.mysql.com/doc/refman/5.7/en/identifiers.html
-     *
-     * @param $name
-     * @param int $length
-     * @param null $suffix
-     * @return string
-     */
-    public static function truncateName($name, $length = 64, $suffix = null)
-    {
-        if (strlen($name) > $length) {
-            if (StringHelper::endsWith($name, $suffix)) {
-                $name = substr($name, 0, strlen($suffix) * -1);
+        foreach (SchemaHelper::findTableForeignKeys($this->db, $table) as $key => $index) {
+            if ($index->columnNames === (array)$column) {
+                $this->dropForeignKey($key, $table);
             }
-            return dechex(crc32($name)) . $suffix;
         }
-
-        return $name;
     }
 }

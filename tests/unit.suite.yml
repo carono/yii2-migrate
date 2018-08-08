@@ -1,0 +1,8 @@
+class_name: UnitTester
+modules:
+  enabled:
+  - Yii2
+coverage:
+  enabled: true
+  include:
+    - src/*
