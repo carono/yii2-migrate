@@ -23,9 +23,5 @@
       "type": "composer",
       "url": "https://asset-packagist.org"
     }
-  ],
-  "require-dev": {
-    "carono/yii2-giix": "*",
-    "yiisoft/yii2-gii": "*"
-  }
+  ]
 }
