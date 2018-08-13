@@ -1,9 +1,9 @@
 <?php
 return [
     'class' => 'yii\db\Connection',
-    'dsn' => 'mysql:host=localhost;dbname=test;port=3309',
+    'dsn' => 'mysql:host=localhost;dbname=test',
     'tablePrefix' => 'pfx_',
     'username' => 'root',
-    'password' => 'cvtksq0406',
+    'password' => '',
     'charset' => 'utf8',
 ];
