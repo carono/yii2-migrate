@@ -245,6 +245,10 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
 
     public function testDropIndexByColumn()
     {
+        if (\Yii::$app->db->driverName === 'pgsql') {
+            $this->markTestSkipped('https://github.com/yiisoft/yii2/issues/16639');
+        }
+
         $this->migration->createIndex(null, '{{%user}}', ['name', 'login']);
         $this->migration->createIndex(null, '{{%user}}', ['login', 'name']);
         $this->migration->createIndex(null, '{{%user}}', ['company_id', 'name']);
@@ -341,7 +345,6 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
     {
         if (\Yii::$app->db->driverName !== 'mysql') {
             $this->markTestSkipped('Only for mysql');
-            return;
         }
         $newTables = [
             '{{%test_table1}}' => [
@@ -370,7 +373,6 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
     {
         if (\Yii::$app->db->driverName !== 'mysql') {
             $this->markTestSkipped('Only for mysql');
-            return;
         }
         $newTables = [
             '{{%test_table1}}' => [
