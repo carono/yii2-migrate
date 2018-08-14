@@ -15,7 +15,8 @@
   },
   "autoload": {
     "psr-4": {
-      "carono\\yii2migrate\\": "src"
+      "carono\\yii2migrate\\": "src",
+      "carono\\yii2migrate\\exceptions\\": "exceptions"
     }
   },
   "repositories": [

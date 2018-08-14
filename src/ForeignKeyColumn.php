@@ -3,6 +3,7 @@
 namespace carono\yii2migrate;
 
 
+use carono\yii2migrate\exceptions\ForeignKeyException;
 use carono\yii2migrate\helpers\SchemaHelper;
 use yii\db\ColumnSchemaBuilder;
 
@@ -71,6 +72,9 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
         return $name;
     }
 
+    /**
+     * @throws ForeignKeyException
+     */
     public function apply()
     {
         $this->migrate->addForeignKey(
@@ -92,9 +96,21 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
         return $this->_refTable;
     }
 
+    /**
+     * @param $table
+     * @return mixed
+     * @throws ForeignKeyException
+     */
     protected function getRefColumnByTable($table)
     {
-        return current($this->migrate->db->getTableSchema($table)->primaryKey);
+        if (!$this->db->getTableSchema($table, true)) {
+            throw new ForeignKeyException("Ref table '$table' not found");
+        }
+        $pk = current($this->migrate->db->getTableSchema($table)->primaryKey);
+        if (!$pk){
+            throw new ForeignKeyException("Primary key not found in ref table '$table'");
+        }
+        return $pk;
     }
 
     /**

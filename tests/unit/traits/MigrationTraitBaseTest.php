@@ -2,6 +2,7 @@
 
 namespace traits;
 
+use carono\yii2migrate\exceptions\ForeignKeyException;
 use carono\yii2migrate\helpers\SchemaHelper;
 use carono\yii2migrate\Migration;
 
@@ -462,5 +463,14 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
         $object->downNewIndex();
         $this->tester->assertIndexByColumnsNotExist('{{%user}}', ['name']);
         $this->tester->assertUniqueIndexByColumnsNotExist('{{%user}}', ['login']);
+    }
+
+    public function testCreateForeignKeyOnNonExistTable()
+    {
+        $this->expectException(ForeignKeyException::class);
+        $this->expectExceptionMessage("Ref table '{{%non_exist}}' not found");
+
+        $fk = $this->migration->foreignKey('{{%non_exist}}');
+        $fk->sourceTable('{{%user}}')->apply();
     }
 }
