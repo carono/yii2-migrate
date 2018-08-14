@@ -57,16 +57,14 @@ class ForeignKeyColumnBaseTest extends \Codeception\Test\Unit
     public function testApply()
     {
         $this->getFk()->apply();
-        $schema = $this->getMigrate()->db->getTableSchema('{{%test_source}}');
-        $this->assertArrayHasKey('pfx_test_source[ref_id]_pfx_test_ref[id]_fk', $schema->foreignKeys);
+        $this->tester->assertForeignKeyExistByName('{{%test_source}}', 'pfx_test_source[ref_id]_pfx_test_ref[id]_fk');
     }
 
     public function testRemove()
     {
         $this->testApply();
         $this->getFk()->remove();
-        $schema = $this->getMigrate()->db->getTableSchema('{{%test_source}}');
-        $this->assertArrayNotHasKey('pfx_test_source[ref_id]_pfx_test_ref[id]_fk', $schema->foreignKeys);
+        $this->tester->assertForeignKeyNotExistByName('{{%test_source}}', 'pfx_test_source[ref_id]_pfx_test_ref[id]_fk');
     }
 
     public function testOnDeleteNull()

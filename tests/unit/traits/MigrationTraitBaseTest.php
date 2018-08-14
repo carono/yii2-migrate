@@ -71,80 +71,6 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
         return $this->getProtectedMethod($name)->invokeArgs($this->migration, $args);
     }
 
-    public function assertTableExist($table)
-    {
-        $this->assertNotNull(\Yii::$app->db->getTableSchema($table));
-    }
-
-    public function assertTableNotExist($table)
-    {
-        $this->assertNull(\Yii::$app->db->getTableSchema($table));
-    }
-
-    public function assertForeignKeyExist($table, $column)
-    {
-        $foreignKey = SchemaHelper::findTableForeignKeys(\Yii::$app->db, $table);
-        $result = array_filter($foreignKey, function ($index) use ($column) {
-            return $index->columnNames === (array)$column;
-        });
-        $this->assertNotEmpty($result);
-    }
-
-    public function assertForeignKeyNotExist($table, $column)
-    {
-        $foreignKey = SchemaHelper::findTableForeignKeys(\Yii::$app->db, $table);
-        $result = array_filter($foreignKey, function ($index) use ($column) {
-            return $index->columnNames === (array)$column;
-        });
-        $this->assertEmpty($result);
-    }
-
-    public function assertColumnNotExist($table, $column)
-    {
-        $this->assertNull(\Yii::$app->db->getTableSchema($table)->getColumn($column));
-    }
-
-    public function assertColumnExist($table, $column)
-    {
-        $this->assertNotNull(\Yii::$app->db->getTableSchema($table)->getColumn($column));
-    }
-
-    public function assertIndexByColumnsNotExist($table, $column)
-    {
-        $index = SchemaHelper::findNonUniqueIndexes(\Yii::$app->db, $table);
-        $result = array_filter($index, function ($index) use ($column) {
-            return $index->columnNames === (array)$column;
-        });
-        $this->assertEmpty($result);
-    }
-
-    public function assertIndexByColumnsExist($table, $column)
-    {
-        $index = SchemaHelper::findNonUniqueIndexes(\Yii::$app->db, $table);
-        $result = array_filter($index, function ($index) use ($column) {
-            return $index->columnNames === (array)$column;
-        });
-        $this->assertNotEmpty($result);
-    }
-
-    public function assertUniqueIndexByColumnsNotExist($table, $column)
-    {
-        $index = SchemaHelper::findUniqueIndexes(\Yii::$app->db, $table);
-        $result = array_filter($index, function ($index) use ($column) {
-            return $index->columnNames === (array)$column;
-        });
-        $this->assertEmpty($result);
-    }
-
-    public function assertUniqueIndexByColumnsExist($table, $column)
-    {
-        $index = SchemaHelper::findUniqueIndexes(\Yii::$app->db, $table);
-        $result = array_filter($index, function ($index) use ($column) {
-            return $index->columnNames === (array)$column;
-        });
-        $this->assertNotEmpty($result);
-    }
-
     /**
      * @param $params
      * @return Migration|object
@@ -329,14 +255,14 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
                 return $newTables;
             }
         ]);
-        $this->assertTableNotExist('{{%test_table1}}');
-        $this->assertTableNotExist('{{%test_table2}}');
+        $this->tester->assertTableNotExist('{{%test_table1}}');
+        $this->tester->assertTableNotExist('{{%test_table2}}');
 
         $object->upNewTables();
-        $this->assertTableExist('{{%test_table1}}');
-        $this->assertTableExist('{{%test_table2}}');
+        $this->tester->assertTableExist('{{%test_table1}}');
+        $this->tester->assertTableExist('{{%test_table2}}');
 
-        $this->assertForeignKeyExist('{{%test_table2}}', 'table1_id');
+        $this->tester->assertForeignKeyExist('{{%test_table2}}', 'table1_id');
 
         $object->downNewTables();
     }
@@ -358,10 +284,10 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
                 return $newTables;
             }
         ]);
-        $this->assertTableNotExist('{{%test_table1}}');
+        $this->tester->assertTableNotExist('{{%test_table1}}');
 
         $object->upNewTables();
-        $this->assertTableExist('{{%test_table1}}');
+        $this->tester->assertTableExist('{{%test_table1}}');
 
         $sql = "SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'pfx_test_table1'";
         $this->assertSame('InnoDB', \Yii::$app->db->createCommand($sql)->queryScalar());
@@ -386,10 +312,10 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
                 return $newTables;
             }
         ]);
-        $this->assertTableNotExist('{{%test_table1}}');
+        $this->tester->assertTableNotExist('{{%test_table1}}');
 
         $object->upNewTables();
-        $this->assertTableExist('{{%test_table1}}');
+        $this->tester->assertTableExist('{{%test_table1}}');
 
         $sql = "SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'pfx_test_table1'";
         $this->assertSame('MyISAM', \Yii::$app->db->createCommand($sql)->queryScalar());
@@ -414,15 +340,15 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
                 return $newTables;
             }
         ]);
-        $this->assertTableNotExist('{{%test_table1}}');
-        $this->assertTableNotExist('{{%test_table2}}');
-        $this->assertTableNotExist('{{%pivots}}');
+        $this->tester->assertTableNotExist('{{%test_table1}}');
+        $this->tester->assertTableNotExist('{{%test_table2}}');
+        $this->tester->assertTableNotExist('{{%pivots}}');
 
         $object->upNewTables();
 
-        $this->assertTableExist('{{%test_table1}}');
-        $this->assertTableExist('{{%test_table2}}');
-        $this->assertTableExist('{{%pivots}}');
+        $this->tester->assertTableExist('{{%test_table1}}');
+        $this->tester->assertTableExist('{{%test_table2}}');
+        $this->tester->assertTableExist('{{%pivots}}');
 
         $object->downNewTables();
     }
@@ -442,13 +368,13 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
                 return $newColumns;
             }
         ]);
-        $this->assertColumnNotExist('{{%user}}', 'surname');
-        $this->assertColumnNotExist('{{%company}}', 'address');
+        $this->tester->assertColumnNotExist('{{%user}}', 'surname');
+        $this->tester->assertColumnNotExist('{{%company}}', 'address');
 
         $object->upNewColumns();
 
-        $this->assertColumnExist('{{%user}}', 'surname');
-        $this->assertColumnExist('{{%company}}', 'address');
+        $this->tester->assertColumnExist('{{%user}}', 'surname');
+        $this->tester->assertColumnExist('{{%company}}', 'address');
 
         $object->downNewColumns();
     }
@@ -465,12 +391,12 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
                 return $newColumns;
             }
         ]);
-        $this->assertColumnNotExist('{{%user}}', 'sub_company_id');
-        $this->assertForeignKeyNotExist('{{%user}}', 'sub_company_id');
+        $this->tester->assertColumnNotExist('{{%user}}', 'sub_company_id');
+        $this->tester->assertForeignKeyNotExist('{{%user}}', 'sub_company_id');
         $object->upNewColumns();
 
-        $this->assertColumnExist('{{%user}}', 'sub_company_id');
-        $this->assertForeignKeyExist('{{%user}}', 'sub_company_id');
+        $this->tester->assertColumnExist('{{%user}}', 'sub_company_id');
+        $this->tester->assertForeignKeyExist('{{%user}}', 'sub_company_id');
 
         $object->downNewColumns();
     }
@@ -487,11 +413,11 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
                 return $newColumns;
             }
         ]);
-        $this->assertTableNotExist('{{%pivots}}');
+        $this->tester->assertTableNotExist('{{%pivots}}');
         $object->upNewColumns();
-        $this->assertTableExist('{{%pivots}}');
+        $this->tester->assertTableExist('{{%pivots}}');
         $object->downNewColumns();
-        $this->assertTableNotExist('{{%pivots}}');
+        $this->tester->assertTableNotExist('{{%pivots}}');
     }
 
     public function testNewIndex()
@@ -507,14 +433,14 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
                 return $newIndex;
             }
         ]);
-        $this->assertIndexByColumnsNotExist('{{%user}}', ['name']);
-        $this->assertUniqueIndexByColumnsNotExist('{{%user}}', ['login']);
+        $this->tester->assertIndexByColumnsNotExist('{{%user}}', ['name']);
+        $this->tester->assertUniqueIndexByColumnsNotExist('{{%user}}', ['login']);
         $object->upNewIndex();
-        $this->assertIndexByColumnsExist('{{%user}}', ['name']);
-        $this->assertUniqueIndexByColumnsExist('{{%user}}', ['login']);
+        $this->tester->assertIndexByColumnsExist('{{%user}}', ['name']);
+        $this->tester->assertUniqueIndexByColumnsExist('{{%user}}', ['login']);
         $object->downNewIndex();
-        $this->assertIndexByColumnsNotExist('{{%user}}', ['name']);
-        $this->assertUniqueIndexByColumnsNotExist('{{%user}}', ['login']);
+        $this->tester->assertIndexByColumnsNotExist('{{%user}}', ['name']);
+        $this->tester->assertUniqueIndexByColumnsNotExist('{{%user}}', ['login']);
     }
 
     public function testNewIndexOldStyle()
@@ -528,13 +454,13 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
                 return $newIndex;
             }
         ]);
-        $this->assertIndexByColumnsNotExist('{{%user}}', ['name']);
-        $this->assertUniqueIndexByColumnsNotExist('{{%user}}', ['login']);
+        $this->tester->assertIndexByColumnsNotExist('{{%user}}', ['name']);
+        $this->tester->assertUniqueIndexByColumnsNotExist('{{%user}}', ['login']);
         $object->upNewIndex();
-        $this->assertIndexByColumnsExist('{{%user}}', ['name']);
-        $this->assertUniqueIndexByColumnsExist('{{%user}}', ['login']);
+        $this->tester->assertIndexByColumnsExist('{{%user}}', ['name']);
+        $this->tester->assertUniqueIndexByColumnsExist('{{%user}}', ['login']);
         $object->downNewIndex();
-        $this->assertIndexByColumnsNotExist('{{%user}}', ['name']);
-        $this->assertUniqueIndexByColumnsNotExist('{{%user}}', ['login']);
+        $this->tester->assertIndexByColumnsNotExist('{{%user}}', ['name']);
+        $this->tester->assertUniqueIndexByColumnsNotExist('{{%user}}', ['login']);
     }
 }

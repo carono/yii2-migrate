@@ -1,8 +1,9 @@
 class_name: UnitTester
 modules:
   enabled:
+  - Asserts
   - Yii2
 coverage:
   enabled: true
   include:
-    - src/*
+  - src/*
