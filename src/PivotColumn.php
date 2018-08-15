@@ -3,6 +3,7 @@
 namespace carono\yii2migrate;
 
 use carono\yii2migrate\helpers\SchemaHelper;
+use yii\helpers\Inflector;
 
 /**
  * Class PivotColumn
@@ -159,7 +160,11 @@ class PivotColumn
         } else {
             $name = $this->_refColumn;
         }
-        return SchemaHelper::expandTablePrefix($name, '');
+        $refColumn = SchemaHelper::expandTablePrefix($name, '');
+        if (strtolower($refColumn) === strtolower($this->getSourceColumn())) {
+            $refColumn = Inflector::singularize($this->_name) . '_id';
+        }
+        return $refColumn;
     }
 
     /**

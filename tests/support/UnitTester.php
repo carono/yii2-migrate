@@ -123,4 +123,22 @@ class UnitTester extends \Codeception\Actor
         $index = SchemaHelper::findTableForeignKeys(\Yii::$app->db, $table);
         $this->assertArrayNotHasKey($name, $index);
     }
+
+    /**
+     * @param $index
+     * @return \tests\yii2migrate\models\User
+     */
+    public function grabUser($index)
+    {
+        return $this->grabFixture('user', $index);
+    }
+
+    /**
+     * @param $index
+     * @return \tests\yii2migrate\models\Company
+     */
+    public function grabCompany($index)
+    {
+        return $this->grabFixture('company', $index);
+    }
 }

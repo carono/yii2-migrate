@@ -1,7 +1,7 @@
 <?php
 
 use yii\db\Migration;
-
+use \yii\db\Schema;
 /**
  * Class m180712_120503_init
  */
@@ -28,6 +28,7 @@ class m180712_120503_init extends Migration
             '{{%user}}' => [
                 'id' => $this->primaryKey(),
                 'name' => $this->string(),
+                'parents' => $this->pivot('{{%user}}') // Создаём сводную таблицу саму на себя
             ],
             '{{%photo}}' => [
                 'id' => $this->primaryKey(),
@@ -47,6 +48,12 @@ class m180712_120503_init extends Migration
                 '@tableOptions' => [
                     'mysql' => 'CHARACTER SET utf8 COLLATE utf8_general_ci ENGINE=InnoDB'
                 ]
+            ],
+            '{{%pv_company_user_photo}}' => [
+                // Созданём сводную таблицу из нескольких ключей
+                'company_id' => $this->foreignKey('{{%company}}', null, Schema::TYPE_PK),
+                'user_id' => $this->foreignKey('{{%user}}', null, Schema::TYPE_PK),
+                'photo_id' => $this->foreignKey('{{%photo}}', null, Schema::TYPE_PK),
             ]
         ];
     }
@@ -76,6 +83,7 @@ class m180712_120503_init extends Migration
     {
         $this->upNewTables();
         $this->upNewColumns();
+        // Добавим FK на существующий столбец
         $this->alterColumn('{{%photo}}', 'user_id', $this->foreignKey('{{%user}}'));
         $this->upNewIndex();
         $this->createIndex(null, '{{%user}}', 'name');
@@ -85,6 +93,7 @@ class m180712_120503_init extends Migration
     {
         $this->dropIndexByColumn('{{%user}}', 'name');
         $this->downNewIndex();
+        // Удалим FK по имени столбца
         $this->dropForeignKeyByColumn('{{%photo}}', 'user_id');
         $this->downNewColumns();
         $this->downNewTables();

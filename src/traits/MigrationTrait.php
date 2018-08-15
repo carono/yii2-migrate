@@ -12,7 +12,6 @@ use yii\db\ColumnSchemaBuilder;
 use yii\db\Migration;
 use yii\db\Schema;
 use yii\helpers\ArrayHelper;
-use yii\helpers\StringHelper;
 
 /**
  * Trait MigrationTrait
@@ -276,7 +275,7 @@ trait MigrationTrait
     public function addPrimaryKey($name, $table, $columns)
     {
         if ($name === null) {
-            $name = self::formIndexName($table, $columns, 'pk');
+            $name = self::formIndexName($table, $columns, '_pk', $this->db->tablePrefix);
             $name = $this->expandTablePrefix($name);
         }
         $name = SchemaHelper::truncateIndexName($name, 64, '_pk');

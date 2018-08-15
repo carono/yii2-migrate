@@ -20,6 +20,7 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
     protected function _before()
     {
         $this->migration = $migrate = new Migration(['db' => \Yii::$app->db]);
+        \Yii::$app->db->tablePrefix = 'trait_';
         $migrate->createTable('{{%photo}}', [
             'id' => $migrate->integer(),
             'name' => $migrate->string(),
@@ -93,7 +94,7 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
     {
         $this->migration->createIndex(null, '{{%user}}', ['name', 'login']);
         $index = SchemaHelper::findIndexes(\Yii::$app->db, '{{%user}}');
-        $this->assertArrayHasKey('pfx_user:name:login_idx', $index);
+        $this->assertArrayHasKey('trait_user:name:login_idx', $index);
     }
 
     public function testAddForeignKeyDefault()
@@ -107,7 +108,7 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
     {
         $this->migration->addForeignKey(null, '{{%user}}', 'company_id', '{{%company}}', 'id');
         $foreignKeys = \Yii::$app->db->getTableSchema('{{%user}}')->foreignKeys;
-        $this->assertArrayHasKey('pfx_user[company_id]_pfx_company[id]_fk', $foreignKeys);
+        $this->assertArrayHasKey('trait_user[company_id]_trait_company[id]_fk', $foreignKeys);
     }
 
     public function testAlterColumnDefault()
@@ -121,7 +122,7 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
     {
         $this->migration->alterColumn('{{%user}}', 'company_id', $this->migration->foreignKey('{{%company}}'));
         $foreignKeys = \Yii::$app->db->getTableSchema('{{%user}}')->foreignKeys;
-        $this->assertArrayHasKey('pfx_user[company_id]_pfx_company[id]_fk', $foreignKeys);
+        $this->assertArrayHasKey('trait_user[company_id]_trait_company[id]_fk', $foreignKeys);
     }
 
     public function testAddColumnDefault()
@@ -135,7 +136,7 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
     {
         $this->migration->addColumn('{{%user}}', 'company2_id', $this->migration->foreignKey('{{%company}}'));
         $foreignKeys = \Yii::$app->db->getTableSchema('{{%user}}')->foreignKeys;
-        $this->assertArrayHasKey('pfx_user[company2_id]_pfx_company[id]_fk', $foreignKeys);
+        $this->assertArrayHasKey('trait_user[company2_id]_trait_company[id]_fk', $foreignKeys);
     }
 
     public function testAddPrimaryKey()
@@ -163,7 +164,7 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
     {
         $this->migration->dropColumn('{{%user}}', 'department_id');
         $foreignKeys = \Yii::$app->db->getTableSchema('{{%user}}')->foreignKeys;
-        $this->assertArrayNotHasKey('pfx_user[department_id]_pfx_department[id]_fk', $foreignKeys);
+        $this->assertArrayNotHasKey('trait_user[department_id]_trait_department[id]_fk', $foreignKeys);
 
         $columns = \Yii::$app->db->getTableSchema('{{%user}}')->getColumnNames();
 
@@ -181,38 +182,36 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
         $this->migration->createIndex(null, '{{%user}}', ['company_id', 'name']);
 
         $index = SchemaHelper::findIndexes($this->migration->db, '{{%user}}');
-        $this->assertArrayHasKey('pfx_user:name:login_idx', $index);
-        $this->assertArrayHasKey('pfx_user:login:name_idx', $index);
-        $this->assertArrayHasKey('pfx_user:company_id:name_idx', $index);
+        $this->assertArrayHasKey('trait_user:name:login_idx', $index);
+        $this->assertArrayHasKey('trait_user:login:name_idx', $index);
+        $this->assertArrayHasKey('trait_user:company_id:name_idx', $index);
 
         $this->migration->dropIndexByColumn('{{%user}}', 'name');
 
         $index = SchemaHelper::findIndexes($this->migration->db, '{{%user}}');
-        $this->assertArrayHasKey('pfx_user:name:login_idx', $index);
-        $this->assertArrayHasKey('pfx_user:login:name_idx', $index);
-        $this->assertArrayHasKey('pfx_user:company_id:name_idx', $index);
+        $this->assertArrayHasKey('trait_user:name:login_idx', $index);
+        $this->assertArrayHasKey('trait_user:login:name_idx', $index);
+        $this->assertArrayHasKey('trait_user:company_id:name_idx', $index);
 
         $this->migration->dropIndexByColumn('{{%user}}', ['login', 'name']);
 
         $index = SchemaHelper::findIndexes($this->migration->db, '{{%user}}');
-        $this->assertArrayHasKey('pfx_user:name:login_idx', $index);
-        $this->assertArrayNotHasKey('pfx_user:login:name_idx', $index);
-        $this->assertArrayHasKey('pfx_user:company_id:name_idx', $index);
+        $this->assertArrayHasKey('trait_user:name:login_idx', $index);
+        $this->assertArrayNotHasKey('trait_user:login:name_idx', $index);
+        $this->assertArrayHasKey('trait_user:company_id:name_idx', $index);
     }
 
     public function testDropForeignKeyByColumn()
     {
         $this->migration->addForeignKey(null, '{{%user}}', 'company_id, department_id', '{{%pv_department}}', 'company_id, department_id');
-        $foreignKey = SchemaHelper::findTableForeignKeys($this->migration->db, '{{%user}}');
-        $this->assertArrayHasKey('pfx_user[department_id]_pfx_department[id]_fk', $foreignKey);
-        $this->assertArrayHasKey('aa241947_fk', $foreignKey);
+
+        $this->tester->assertForeignKeyExistByName('{{%user}}', 'trait_user[department_id]_trait_department[id]_fk');
+        $this->tester->assertForeignKeyExistByName('{{%user}}', '4b1626f3_fk');
 
         $this->migration->dropForeignKeyByColumn('{{%user}}', 'department_id');
 
-        $foreignKey = SchemaHelper::findTableForeignKeys($this->migration->db, '{{%user}}');
-
-        $this->assertArrayNotHasKey('pfx_user[department_id]_pfx_department[id]_fk', $foreignKey);
-        $this->assertArrayHasKey('aa241947_fk', $foreignKey);
+        $this->tester->assertForeignKeyNotExistByName('{{%user}}', 'trait_user[department_id]_trait_department[id]_fk');
+        $this->tester->assertForeignKeyExistByName('{{%user}}', '4b1626f3_fk');
     }
 
     public function testNewTableDefault()
@@ -290,7 +289,7 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
         $object->upNewTables();
         $this->tester->assertTableExist('{{%test_table1}}');
 
-        $sql = "SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'pfx_test_table1'";
+        $sql = "SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trait_test_table1'";
         $this->assertSame('InnoDB', \Yii::$app->db->createCommand($sql)->queryScalar());
 
         $object->downNewTables();
@@ -318,7 +317,7 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
         $object->upNewTables();
         $this->tester->assertTableExist('{{%test_table1}}');
 
-        $sql = "SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'pfx_test_table1'";
+        $sql = "SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'trait_test_table1'";
         $this->assertSame('MyISAM', \Yii::$app->db->createCommand($sql)->queryScalar());
 
         $object->downNewTables();
@@ -407,6 +406,25 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
         $newColumns = [
             '{{%user}}' => [
                 'pivots' => $this->migration->pivot('{{%company}}')->tableName('{{%pivots}}')
+            ],
+        ];
+        $object = $this->createMigration([
+            'newColumns' => function () use ($newColumns) {
+                return $newColumns;
+            }
+        ]);
+        $this->tester->assertTableNotExist('{{%pivots}}');
+        $object->upNewColumns();
+        $this->tester->assertTableExist('{{%pivots}}');
+        $object->downNewColumns();
+        $this->tester->assertTableNotExist('{{%pivots}}');
+    }
+
+    public function testNewColumnsPivotSelf()
+    {
+        $newColumns = [
+            '{{%user}}' => [
+                'pivots' => $this->migration->pivot('{{%user}}')->tableName('{{%pivots}}')
             ],
         ];
         $object = $this->createMigration([
