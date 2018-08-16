@@ -6,6 +6,7 @@ tools:
   php_cpd: false
   external_code_coverage:
     timeout: 600    # Timeout in seconds.
+    php_code_coverage: true
 checks:
   php:
     code_rating: true
