@@ -11,7 +11,8 @@ return [
     'components' => [
         'log' => null,
         'cache' => null,
-        'db' => require __DIR__ . '/db-mysql.php'
+        'db' => require __DIR__ . '/db-mysql.php',
+        'db2' => require __DIR__ . '/db-pgsql.php',
     ],
     'modules' => [
         'gii' => [
