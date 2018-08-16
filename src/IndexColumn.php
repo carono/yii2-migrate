@@ -65,12 +65,36 @@ class IndexColumn
         return $this;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getTable()
+    {
+        return $this->_table;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getColumns()
+    {
+        return $this->_columns;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getUnique()
+    {
+        return $this->_unique;
+    }
+
     public function formIndexName()
     {
         $unique = $this->_unique;
         $columns = $this->_columns;
         if (!$this->_name) {
-            $indexName = Migration::formIndexName($this->_table, $columns, $unique ? 'unq' : 'idx');
+            $indexName = Migration::formIndexName($this->_table, $columns, $unique ? '_unq' : '_idx', $this->migrate->db->tablePrefix);
             $name = $this->migrate->expandTablePrefix($indexName);
         } else {
             $name = $this->_name;
@@ -86,5 +110,10 @@ class IndexColumn
     public function remove()
     {
         $this->migrate->dropIndex($this->formIndexName(), $this->_table);
+    }
+
+    public function getName()
+    {
+        return $this->_name;
     }
 }

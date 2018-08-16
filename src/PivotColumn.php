@@ -2,6 +2,9 @@
 
 namespace carono\yii2migrate;
 
+use carono\yii2migrate\helpers\SchemaHelper;
+use yii\helpers\Inflector;
+
 /**
  * Class PivotColumn
  *
@@ -9,13 +12,14 @@ namespace carono\yii2migrate;
  */
 class PivotColumn
 {
-    protected $_refTable = null;
-    protected $_refColumn = null;
-    protected $_sourceTable = null;
-    protected $_sourceColumn = null;
-    protected $_name = null;
-    protected $_tableName = null;
+    protected $_refTable;
+    protected $_refColumn;
+    protected $_sourceTable;
+    protected $_sourceColumn;
+    protected $_name;
+    protected $_tableName;
     protected $_columns = [];
+    protected $_prefix = 'pv';
     /**
      * @var Migration
      */
@@ -26,7 +30,17 @@ class PivotColumn
      */
     public function __toString()
     {
-        return 'pv';
+        return $this->getPrefix();
+    }
+
+    public function setPrefix($value)
+    {
+        $this->_prefix = $value;
+    }
+
+    public function getPrefix()
+    {
+        return $this->_prefix;
     }
 
     /**
@@ -70,12 +84,28 @@ class PivotColumn
     }
 
     /**
+     * @return array
+     */
+    public function getColumns()
+    {
+        return $this->_columns;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTableName()
+    {
+        return $this->_tableName;
+    }
+
+    /**
      * @return mixed
      */
     public function getName()
     {
-        $name = $this->_tableName ? $this->_tableName : join('_', ["pv", $this->_sourceTable, $this->_name]);
-        return "{{%" . Migration::setTablePrefix($name, '') . "}}";
+        $name = $this->_tableName ?: implode('_', [$this->getPrefix(), $this->_sourceTable, $this->_name]);
+        return '{{%' . SchemaHelper::expandTablePrefix($name, '') . '}}';
     }
 
     public function remove()
@@ -96,7 +126,7 @@ class PivotColumn
             $this->getRefColumn() => $this->migrate->foreignKey($this->getRefTable()),
         ];
         $columnsInt = array_combine(array_keys($columns), [$this->migrate->integer(), $this->migrate->integer()]);
-        if ($this->migrate->db->driverName == "mysql") {
+        if ($this->migrate->db->driverName === 'mysql') {
             $this->migrate->createTable($this->getName(), $columnsInt);
             $this->migrate->addPrimaryKey(null, $this->getName(), array_keys($columns));
             foreach ($columns as $name => $type) {
@@ -126,11 +156,15 @@ class PivotColumn
     public function getRefColumn()
     {
         if (!$this->_refColumn) {
-            $name = join("_", [$this->getRefTable(), "id"]);
+            $name = implode('_', [$this->getRefTable(), 'id']);
         } else {
             $name = $this->_refColumn;
         }
-        return Migration::setTablePrefix($name, '');
+        $refColumn = SchemaHelper::expandTablePrefix($name, '');
+        if (strtolower($refColumn) === strtolower($this->getSourceColumn())) {
+            $refColumn = Inflector::singularize($this->_name) . '_id';
+        }
+        return $refColumn;
     }
 
     /**
@@ -147,11 +181,11 @@ class PivotColumn
     public function getSourceColumn()
     {
         if (!$this->_sourceColumn) {
-            $name = join("_", [$this->getSourceTable(), "id"]);
+            $name = implode('_', [$this->getSourceTable(), 'id']);
         } else {
             $name = $this->_sourceColumn;
         }
-        return Migration::setTablePrefix($name, '');
+        return SchemaHelper::expandTablePrefix($name, '');
     }
 
     /**

@@ -2,7 +2,7 @@
 
 namespace carono\yii2migrate\traits;
 
-use yii\base\Model;
+use carono\yii2migrate\helpers\SchemaHelper;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use yii\helpers\ArrayHelper;
@@ -16,7 +16,6 @@ use yii\helpers\ArrayHelper;
 trait PivotTrait
 {
     protected $_storage = [];
-    protected $_storageAttributes = [];
 
     /**
      * @param string|ActiveRecord $pivotClass
@@ -25,7 +24,7 @@ trait PivotTrait
      */
     public function deletePivots($pivotClass)
     {
-        return $pivotClass::deleteAll([$this->getMainPkField($this, $pivotClass) => $this->getMainPk()]);
+        return $pivotClass::deleteAll([$this->getPivotMainPkField($this, $pivotClass) => $this->getMainPk()]);
     }
 
     /**
@@ -36,10 +35,10 @@ trait PivotTrait
     public function getStoragePivots($pivotClass)
     {
         if (isset($this->_storage[$pivotClass])) {
-            return $this->_storage[$pivotClass];
-        } else {
-            return [];
+            return array_values($this->_storage[$pivotClass]);
         }
+
+        return [];
     }
 
     /**
@@ -57,10 +56,10 @@ trait PivotTrait
      */
     private function getPivotCondition($model, $pivotClass)
     {
-        $mainPk = $this->getPkField($this, $pivotClass);
+        $mainPk = $this->getPivotMainPkField($this, $pivotClass);
         $condition = [$mainPk => $this->getMainPk()];
-        if (!is_null($model)) {
-            $slavePk = $this->getSlavePkField($model, $pivotClass);
+        if ($model !== null) {
+            $slavePk = $this->getPivotSlavePkField($model, $pivotClass);
             $condition[$slavePk] = $model->getAttribute($model->primaryKey()[0]);
         }
         return $condition;
@@ -117,43 +116,28 @@ trait PivotTrait
     /**
      * @param ActiveRecord[] $models
      * @param string $pivotClass
-     * @param null $modelClass
+     * @param array $attributes
      */
-    public function storagePivots($models, $pivotClass, $modelClass = null)
+    public function storagePivots($models, $pivotClass, $attributes = [])
     {
-        if (!is_array($models)) {
-            $models = [$models];
-        }
-        foreach ($models as $model) {
-            $this->storagePivot($model, $pivotClass, $modelClass);
+        foreach ((array)$models as $model) {
+            $this->storagePivot($model, $pivotClass, $attributes);
         }
     }
 
     /**
      * @param ActiveRecord $model
-     * @param ActiveRecord|string $pivotClass
-     * @param ActiveRecord $modelClass
-     *
-     * @param array $pvAttributes
-     * @throws \Exception
+     * @param string $pivotClass
+     * @param array $attributes
      */
-    public function storagePivot($model, $pivotClass, $modelClass = null, $pvAttributes = [])
+    public function storagePivot($model, $pivotClass, $attributes = [])
     {
-        if (is_numeric($model) && $modelClass) {
-            $model = $modelClass::findOne($model);
-        } elseif (is_array($model)) {
-            $model = \Yii::createObject($model);
-        }
-        if (!($model instanceof Model)) {
-            throw new \Exception('Cannot determine or model not found');
-        }
-        $this->_storage[$pivotClass][] = $model;
-        $this->_storageAttributes[$pivotClass][spl_object_hash($model)] = $pvAttributes;
+        $this->_storage[$pivotClass][spl_object_hash($model)] = ['model' => $model, 'attributes' => $attributes];
     }
 
     public function getStoragePivotAttribute($model, $pivotClass)
     {
-        return ArrayHelper::getValue($this->_storageAttributes, $pivotClass . '.' . spl_object_hash($model), []);
+        return ArrayHelper::getValue($this->_storage, $pivotClass . '.' . spl_object_hash($model) . '.attributes', []);
     }
 
     /**
@@ -166,7 +150,7 @@ trait PivotTrait
                 $this->deletePivots($pivotClass);
             }
             foreach ($items as $item) {
-                $this->addPivot($item, $pivotClass);
+                $this->addPivot($item['model'], $pivotClass, $item['attributes']);
             }
         }
     }
@@ -192,11 +176,11 @@ trait PivotTrait
                 $find->save();
             }
             return $find;
-        } else {
-            $pv->setAttributes(array_merge($condition, $attributes), false);
-            $pv->save();
-            return $pv;
         }
+
+        $pv->setAttributes(array_merge($condition, $attributes), false);
+        $pv->save();
+        return $pv;
     }
 
     /**
@@ -207,8 +191,8 @@ trait PivotTrait
     public function deletePivot($model, $pivotClass)
     {
         return $pivotClass::deleteAll([
-            $this->getMainPkField($this, $pivotClass) => $this->getMainPk(),
-            $this->getSlavePkField($model, $pivotClass) => $model->{$model->primaryKey()[0]}
+            $this->getPivotMainPkField($this, $pivotClass) => $this->getMainPk(),
+            $this->getPivotSlavePkField($model, $pivotClass) => $model->{$model->primaryKey()[0]}
         ]);
     }
 
@@ -225,16 +209,13 @@ trait PivotTrait
     }
 
     /**
-     * @param $model
+     * @param ActiveRecord $model
      * @param string|ActiveRecord $pivotClass
      * @return string
      */
-    protected function getMainPkField($model, $pivotClass)
+    protected function getPivotMainPkField($model, $pivotClass)
     {
-        /**
-         * @var ActiveRecord $this
-         */
-        return $this->getPkField($model, $pivotClass);
+        return $this->getPivotPkField($model, $pivotClass, false);
     }
 
     /**
@@ -242,9 +223,9 @@ trait PivotTrait
      * @param string|ActiveRecord $pivotClass
      * @return string
      */
-    protected function getSlavePkField($model, $pivotClass)
+    protected function getPivotSlavePkField($model, $pivotClass)
     {
-        return $this->getPkField($model, $pivotClass, true);
+        return $this->getPivotPkField($model, $pivotClass, true);
     }
 
     /**
@@ -253,17 +234,14 @@ trait PivotTrait
      * @param bool $slave
      * @return int|null|string
      */
-    private function getPkField($model, $pivotClass, $slave = false)
+    private function getPivotPkField($model, $pivotClass, $slave = false)
     {
-        // TODO: на данный момент не могу определить, какое поле является главным в сводной таблице
-        // поэтому считаем, что первое по порядку - главное, второе - второстепенное
-
-        if ($filed = $this->getPkFieldByModel($model, $pivotClass)) {
-            return $filed;
-        } else {
-            $pks = self::getDb()->getTableSchema($pivotClass::tableName())->primaryKey;
-            return $slave ? $pks[1] : $pks[0];
+        if ($field = $this->getPkFieldByModel($model, $pivotClass)) {
+            return $field;
         }
+
+        $pks = self::getDb()->getTableSchema($pivotClass::tableName())->primaryKey;
+        return $slave ? $pks[1] : $pks[0];
     }
 
     /**
@@ -276,19 +254,17 @@ trait PivotTrait
         $pks = self::getDb()->getTableSchema($pivotClass::tableName())->primaryKey;
         $fks = self::formFkKeys(self::getDb()->getTableSchema($pivotClass::tableName())->foreignKeys);
         $fks = array_values(array_filter($fks, function ($data) use ($pks) {
-            return in_array($data['field'], $pks);
+            return in_array($data['field'], $pks, true);
         }));
-
-        $table = preg_replace('#{{%([\w\d\-_]+)}}#', $model::getDb()->tablePrefix . "$1", $model::tableName());
-
+        $table = SchemaHelper::expandTablePrefix($model::tableName(), $model::getDb()->tablePrefix);
         $field = null;
         foreach ($fks as $fk) {
-            if ($fk['table'] == $table) {
+            if ($fk['table'] === $table) {
                 if ($field) {
                     return null;
-                } else {
-                    $field = $fk['field'];
                 }
+
+                $field = $fk['field'];
             }
         }
         return $field;
