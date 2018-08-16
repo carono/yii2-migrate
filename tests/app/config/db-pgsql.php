@@ -4,6 +4,6 @@ return [
     'dsn' => 'pgsql:host=localhost;dbname=test',
     'tablePrefix' => 'pfx_',
     'username' => 'postgres',
-    'password' => '',
+    'password' => 'cNNhSGTFgLyD',
     'charset' => 'utf8',
 ];
