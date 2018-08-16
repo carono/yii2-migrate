@@ -6,7 +6,10 @@ php:
 - 5.6
 
 # environment variable used in test suite
-env: TEST_ENVIRONMENT=travis
+env:
+  global:
+  - TASK_TESTS_COVERAGE=0
+
 dist: precise
 
 # faster builds on new travis setup not using sudo
@@ -17,6 +20,15 @@ cache:
   directories:
   - vendor
   - $HOME/.composer/cache
+
+matrix:
+  fast_finish: true
+  include:
+  - php: 7.2
+  # run tests coverage on PHP 7.1
+  - php: 7.1
+    env: TASK_TESTS_COVERAGE=1
+  - php: 5.6
 
 # install dependencies
 install:
@@ -32,6 +44,17 @@ before_script:
 - ~/.composer/vendor/bin/codecept build
 - php tests/app/yii migrate --interactive=0 --db=db
 - php tests/app/yii migrate --interactive=0 --db=db2
+- |
+  if [ $TASK_TESTS_COVERAGE == 1 ]; then
+    PHPUNIT_FLAGS="--coverage-clover=coverage.clover"
+  fi
 
 script:
 - ~/.composer/vendor/bin/codecept run --env mysql,pgsql
+
+after_script:
+- |
+  if [ $TASK_TESTS_COVERAGE == 1 ]; then
+    travis_retry wget https://scrutinizer-ci.com/ocular.phar
+    php ocular.phar code-coverage:upload --format=php-clover coverage.clover
+  fi

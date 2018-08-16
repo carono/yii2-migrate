@@ -1,0 +1,18 @@
+imports:
+- php
+
+tools:
+  php_sim: false
+  php_cpd: false
+  external_code_coverage:
+    timeout: 600    # Timeout in seconds.
+checks:
+  php:
+    code_rating: true
+    duplication: true
+build:
+  nodes:
+    analysis:
+      tests:
+        override:
+        - php-scrutinizer-run
