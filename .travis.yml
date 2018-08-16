@@ -23,6 +23,8 @@ install:
   - travis_retry composer self-update
   - travis_retry composer global require "codeception/codeception"
   - travis_retry composer install --prefer-dist
+  - travis_retry composer require carono/yii2-giix
+  - travis_retry composer require yiisoft/yii2-gii
 
 before_script:
   - mysql -e 'create database test;'
