@@ -1,27 +1,101 @@
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/carono/yii2-migrate/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/carono/yii2-migrate/?branch=master)
+[![Latest Stable Version](https://poser.pugx.org/carono/yii2-migrate/v/stable)](https://packagist.org/packages/carono/yii2-migrate)
+[![Total Downloads](https://poser.pugx.org/carono/yii2-migrate/downloads)](https://packagist.org/packages/carono/yii2-migrate)
+[![License](https://poser.pugx.org/carono/yii2-migrate/license)](https://packagist.org/packages/carono/yii2-migrate)
+[![Build Status](https://travis-ci.org/carono/yii2-migrate.svg?branch=master)](https://travis-ci.org/carono/yii2-migrate)
+[![Code Coverage](https://scrutinizer-ci.com/g/carono/yii2-migrate/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/carono/yii2-migrate/?branch=master)
+
 MigrationTrait   
 =================
-Трейт для помощи в создании базы
+Для расширения возможностей миграции, необходимо добавить трейт **\carono\yii2migrate\traits\MigrationTrait** или наследовать класс миграции от **\carono\yii2migrate\Migration**
 
-|Метод|Описание
-|------|---------
-|self::foreignKey($table)|установка Foreign Key на поле  
-|self::pivot($table)|создание сводной таблицы из 2х primary key
-|dropIndexByColumn('{{%user}}', 'name')|Удаление индекса по столбцу
-|dropForeignKeyByColumn('{{%photo}}', 'user_id')|Удаление FK по столбцу
-|createIndex(null, '{{%user}}', 'name')|Создание индекса с автоматическим именем
+Работа с внешними ключами
+=========================
 
+Создание таблицы, с указанием внешнего ключа, только по имени таблицы
+```php
+$this->createTable('{{%user}}', [
+    'id' => $this->primaryKey(),
+    'company_id' => $this->foreignKey('{{%company}}')
+]);
+```        
+        
+Добавление колонки с внешним ключем
+```php
+$this->addColumn('{{%user}}', 'company_id', $this->foreignKey('{{%company}}'));
+```        
 
+Добавление внешнего ключа на существующую колонку
+```php
+$this->alterColumn('{{%user}}', 'company_id', $this->foreignKey('{{%company}}'));
+```
+
+Удаление внешнего ключа по имени колонки
+```php
+$this->dropForeignKeyByColumn('{{%user}}', 'company_id');
+```
+
+Полная миграция
 ```php
 <?php
 
 use yii\db\Migration;
-
+use \yii\db\Schema;
 /**
  * Class m180712_120503_init
  */
 class m180712_120503_init extends Migration
 {
     use \carono\yii2migrate\traits\MigrationTrait;
+
+    public function tableOptions()
+    {
+        return [
+            'mysql' => 'CHARACTER SET utf8 COLLATE utf8_general_ci ENGINE=InnoDB'
+        ];
+    }
+
+    public function newTables()
+    {
+        return [
+            '{{%logs}}' => [
+                'data' => $this->string(),
+                '@tableOptions' => [
+                    'mysql' => 'CHARACTER SET utf8 COLLATE utf8_general_ci ENGINE=MyISAM'
+                ]
+            ],
+            '{{%user}}' => [
+                'id' => $this->primaryKey(),
+                'name' => $this->string(),
+                'parents' => $this->pivot('{{%user}}') // Создаём сводную таблицу саму на себя
+            ],
+            '{{%photo}}' => [
+                'id' => $this->primaryKey(),
+                'user_id' => $this->integer()
+            ],
+            '{{%company}}' => [
+                'id' => $this->primaryKey(),
+                'name' => $this->string(),
+                // Создадим сводную таблицу {{%pv_company_directors}}
+                'directors' => $this->pivot('{{%user}}', 'director_id')->columns(
+                    [
+                        'hire_at' => $this->dateTime(),
+                        // Внешний ключ с правилом SET NULL при удалении данных из {{%user}}
+                        'hired_id' => $this->foreignKey('{{%user}}', null)->onDeleteNull()->unsigned()
+                    ]
+                ),  // Создаём сводную таблицу pv_company_directors
+                '@tableOptions' => [
+                    'mysql' => 'CHARACTER SET utf8 COLLATE utf8_general_ci ENGINE=InnoDB'
+                ]
+            ],
+            '{{%pv_company_user_photo}}' => [
+                // Созданём сводную таблицу из нескольких ключей
+                'company_id' => $this->foreignKey('{{%company}}', null, Schema::TYPE_PK),
+                'user_id' => $this->foreignKey('{{%user}}', null, Schema::TYPE_PK),
+                'photo_id' => $this->foreignKey('{{%photo}}', null, Schema::TYPE_PK),
+            ]
+        ];
+    }
 
     public function newColumns()
     {
@@ -35,40 +109,12 @@ class m180712_120503_init extends Migration
         ];
     }
 
-    public function newTables()
-    {
-        return [
-            '{{%logs}}' => [
-                'data' => $this->string(),
-                '@tableOptions' => 'CHARACTER SET utf8 COLLATE utf8_general_ci ENGINE=MyISAM'
-            ],
-            '{{%user}}' => [
-                'id' => $this->primaryKey(),
-                'name' => $this->string()
-            ],
-            '{{%photo}}' => [
-                'id' => $this->primaryKey(),
-                'user_id' => $this->integer()
-            ],
-            '{{%company}}' => [
-                'id' => $this->primaryKey(),
-                'name' => $this->string(),
-                'directors' => $this->pivot('{{%user}}', 'director_id')->columns(
-                    [
-                        'hire_at' => $this->dateTime(),
-                        //Внешний ключ с правилом SET NULL при удалении данных из {{%user}}
-                        'hired_id' => $this->foreignKey('{{%user}}')->onDeleteNull()
-                    ]
-                ),  // Создаём сводную таблицу pv_company_directors
-                '@tableOptions' => 'CHARACTER SET utf8 COLLATE utf8_general_ci ENGINE=InnoDB'
-            ]
-        ];
-    }
-
     public function newIndex()
     {
         return [
-            ['{{%company}}', 'name']
+            '{{%company}}' => [
+                $this->index()->columns(['name'])->unique(true)
+            ],
         ];
     }
 
@@ -76,6 +122,7 @@ class m180712_120503_init extends Migration
     {
         $this->upNewTables();
         $this->upNewColumns();
+        // Добавим FK на существующий столбец
         $this->alterColumn('{{%photo}}', 'user_id', $this->foreignKey('{{%user}}'));
         $this->upNewIndex();
         $this->createIndex(null, '{{%user}}', 'name');
@@ -85,6 +132,7 @@ class m180712_120503_init extends Migration
     {
         $this->dropIndexByColumn('{{%user}}', 'name');
         $this->downNewIndex();
+        // Удалим FK по имени столбца
         $this->dropForeignKeyByColumn('{{%photo}}', 'user_id');
         $this->downNewColumns();
         $this->downNewTables();
