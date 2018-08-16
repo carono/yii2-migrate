@@ -5,7 +5,7 @@ tools:
   php_sim: false
   php_cpd: false
   external_code_coverage:
-    timeout: 120    # Timeout in seconds.
+    timeout: 600    # Timeout in seconds.
 checks:
   php:
     code_rating: true

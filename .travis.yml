@@ -46,7 +46,7 @@ before_script:
 - php tests/app/yii migrate --interactive=0 --db=db2
 
 script:
-- ~/.composer/vendor/bin/codecept run --env mysql,pgsql --coverage --xml
+- ~/.composer/vendor/bin/codecept run --env mysql,pgsql --coverage-xml
 
 after_script:
 - |
