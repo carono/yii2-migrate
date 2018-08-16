@@ -24,20 +24,6 @@ class PivotTraitTest extends \Codeception\Test\Unit
      */
     public $company;
 
-    public static function setUpBeforeClass()
-    {
-        $dir = dirname(dirname(__DIR__));
-        $cmd = "php $dir/app/yii migrate/fresh --interactive=0";
-        shell_exec($cmd);
-    }
-
-    public static function tearDownAfterClass()
-    {
-        $dir = dirname(dirname(__DIR__));
-        $cmd = "php $dir/app/yii migrate/down --interactive=0";
-        $x = shell_exec($cmd);
-    }
-
     protected function _before()
     {
     }

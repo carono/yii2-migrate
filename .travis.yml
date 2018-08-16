@@ -1,9 +1,9 @@
 language: php
 
 php:
-  - 7.1
-  - 7.0
-  - 5.6
+- 7.1
+- 7.0
+- 5.6
 
 # environment variable used in test suite
 env: TEST_ENVIRONMENT=travis
@@ -15,21 +15,22 @@ sudo: false
 # cache vendor dirs
 cache:
   directories:
-    - vendor
-    - $HOME/.composer/cache
+  - vendor
+  - $HOME/.composer/cache
 
 # install dependencies
 install:
-  - travis_retry composer self-update
-  - travis_retry composer global require "codeception/codeception"
-  - travis_retry composer install --prefer-dist
-  - travis_retry composer require carono/yii2-giix
-  - travis_retry composer require yiisoft/yii2-gii
+- travis_retry composer self-update
+- travis_retry composer global require "codeception/codeception"
+- travis_retry composer install --prefer-dist
+- travis_retry composer require carono/yii2-giix
+- travis_retry composer require yiisoft/yii2-gii
 
 before_script:
-  - mysql -e 'create database test;'
-  - psql -c 'create database test' -U postgres
-  - ~/.composer/vendor/bin/codecept build
+- mysql -e 'create database test;'
+- psql -c 'create database test' -U postgres
+- ~/.composer/vendor/bin/codecept build
+- php tests/app/yii migrate --interactive=0
 
 script:
-  - ~/.composer/vendor/bin/codecept run --env mysql,pgsql
+- ~/.composer/vendor/bin/codecept run --env mysql,pgsql
