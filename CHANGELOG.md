@@ -1,3 +1,11 @@
+1.1.1
+=====
+* В addColumn() добавлена возможность добавлять сводную таблицу через pivot() 
+```
+$this->addColumn('{{%user}}', 'photos', $this->pivot('{{%photo}}'));
+```
+* \carono\yii2migrate\PivotColumn - функции getName и setName заменены на setSuffix и getSuffix
+
 1.1.0
 =====
 * \carono\yii2migrate\traits\MigrationTrait::formFkName - изменена сигнатура static -> nonstatic

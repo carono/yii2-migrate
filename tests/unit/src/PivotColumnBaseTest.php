@@ -35,7 +35,7 @@ class PivotColumnBaseTest extends \Codeception\Test\Unit
             ->pivot('{{%test_photo}}')
             ->sourceTable('{{%test_user}}')
             ->columns(['value' => 'string'])
-            ->setName('photos');
+            ->setSuffix('photos');
     }
 
     /**

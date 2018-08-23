@@ -16,7 +16,7 @@ class PivotColumn
     protected $_refColumn;
     protected $_sourceTable;
     protected $_sourceColumn;
-    protected $_name;
+    protected $_suffix;
     protected $_tableName;
     protected $_columns = [];
     protected $_prefix = 'pv';
@@ -54,12 +54,12 @@ class PivotColumn
     }
 
     /**
-     * @param $name
+     * @param $value
      * @return $this
      */
-    public function setName($name)
+    public function setSuffix($value)
     {
-        $this->_name = $name;
+        $this->_suffix = $value;
         return $this;
     }
 
@@ -96,24 +96,24 @@ class PivotColumn
      */
     public function getTableName()
     {
-        return $this->_tableName;
+        $name = $this->_tableName ?: implode('_', [$this->getPrefix(), $this->_sourceTable, $this->_suffix]);
+        return '{{%' . SchemaHelper::expandTablePrefix($name, '') . '}}';
     }
 
     /**
      * @return mixed
      */
-    public function getName()
+    public function getSuffix()
     {
-        $name = $this->_tableName ?: implode('_', [$this->getPrefix(), $this->_sourceTable, $this->_name]);
-        return '{{%' . SchemaHelper::expandTablePrefix($name, '') . '}}';
+        return $this->_suffix;
     }
 
     public function remove()
     {
         if ($this->_columns) {
-            $this->migrate->downNewColumns([$this->getName() => $this->_columns]);
+            $this->migrate->downNewColumns([$this->getTableName() => $this->_columns]);
         }
-        $this->migrate->dropTable($this->getName());
+        $this->migrate->dropTable($this->getTableName());
     }
 
     public function apply()
@@ -127,15 +127,15 @@ class PivotColumn
         ];
         $columnsInt = array_combine(array_keys($columns), [$this->migrate->integer(), $this->migrate->integer()]);
 
-        $this->migrate->createTable($this->getName(), $columnsInt);
-        $this->migrate->addPrimaryKey(null, $this->getName(), array_keys($columns));
+        $this->migrate->createTable($this->getTableName(), $columnsInt);
+        $this->migrate->addPrimaryKey(null, $this->getTableName(), array_keys($columns));
 
         foreach ($columns as $name => $type) {
-            $type->sourceTable($this->getName())->sourceColumn($name);
+            $type->sourceTable($this->getTableName())->sourceColumn($name);
             $type->apply();
         }
         if ($advancedColumns = $this->getColumns()) {
-            $this->migrate->upNewColumns([$this->getName() => $this->getColumns()]);
+            $this->migrate->upNewColumns([$this->getTableName() => $this->getColumns()]);
         }
     }
 
@@ -159,7 +159,7 @@ class PivotColumn
         }
         $refColumn = SchemaHelper::expandTablePrefix($name, '');
         if (strtolower($refColumn) === strtolower($this->getSourceColumn())) {
-            $refColumn = Inflector::singularize($this->_name) . '_id';
+            $refColumn = Inflector::singularize($this->_suffix) . '_id';
         }
         return $refColumn;
     }

@@ -47,19 +47,18 @@ class PivotColumnTest extends \Codeception\Test\Unit
         $this->assertSame($pivot->getPrefix(), (string)$pivot);
     }
 
-    public function testSetName()
+    public function testSetSuffix()
     {
         $pivot = new PivotColumn();
-        $pivot->setName('my-name');
-        $pivot->sourceTable('{{%user}}');
-        $this->assertSame('{{%pv_user_my-name}}', $pivot->getName());
+        $pivot->setSuffix('my-name');
+        $this->assertSame('my-name', $pivot->getSuffix());
     }
 
     public function testTableName()
     {
         $pivot = new PivotColumn();
         $pivot->tableName('my-table-name');
-        $this->assertSame('my-table-name', $pivot->getTableName());
+        $this->assertSame('{{%my-table-name}}', $pivot->getTableName());
     }
 
     public function testColumns()
@@ -70,11 +69,11 @@ class PivotColumnTest extends \Codeception\Test\Unit
         $this->assertSame($columns, $pivot->getColumns());
     }
 
-    public function testGetName()
+    public function testGetTableName()
     {
         $pivot = new PivotColumn();
         $pivot->tableName('pivot_table');
-        $this->assertSame('{{%pivot_table}}', $pivot->getName());
+        $this->assertSame('{{%pivot_table}}', $pivot->getTableName());
     }
 
     public function testGetNameAuto()
@@ -82,9 +81,9 @@ class PivotColumnTest extends \Codeception\Test\Unit
         $pivot = new PivotColumn();
         $pivot->sourceTable('{{%user}}');
         $pivot->refTable('{{%photo}}');
-        $pivot->setName('photos');
+        $pivot->setSuffix('photos');
 
-        $this->assertSame('{{%pv_user_photos}}', $pivot->getName());
+        $this->assertSame('{{%pv_user_photos}}', $pivot->getTableName());
     }
 
     public function testSetPrefix()

@@ -181,7 +181,7 @@ trait MigrationTrait
             }
 
             if ($type instanceof PivotColumn) {
-                $type->setName($column)->sourceTable($table);
+                $type->setSuffix($column)->sourceTable($table);
                 $pvs[] = $type;
                 unset($columns[$column]);
             }
@@ -266,7 +266,7 @@ trait MigrationTrait
             $type->apply();
         } elseif ($type instanceof PivotColumn) {
             $type->sourceTable($table);
-            $type->setName($column);
+            $type->setSuffix($column);
             $type->apply();
         } else {
             parent::addColumn($table, $column, $type);
@@ -330,7 +330,7 @@ trait MigrationTrait
         }
         foreach ($result as $column) {
             if ($column[2] instanceof PivotColumn) {
-                $column[2]->setName($column[1])->sourceTable($column[0]);
+                $column[2]->setSuffix($column[1])->sourceTable($column[0]);
             }
             if ($revert) {
                 if ($column[2] instanceof PivotColumn) {
@@ -487,7 +487,7 @@ trait MigrationTrait
             if ($revert) {
                 foreach ($columns as $column => $type) {
                     if ($type instanceof PivotColumn) {
-                        $type->setName($column)->sourceTable($table);
+                        $type->setSuffix($column)->sourceTable($table);
                         $type->remove();
                     }
                 }
