@@ -23,9 +23,8 @@ class PivotColumnBaseTest extends \Codeception\Test\Unit
 
     protected function _after()
     {
-        $this->getPivot()->remove();
-
         $migrate = $this->getMigrate();
+        $this->getPivot()->remove();
         $migrate->dropTable('{{%test_user}}');
         $migrate->dropTable('{{%test_photo}}');
     }

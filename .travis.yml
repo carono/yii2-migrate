@@ -1,10 +1,5 @@
 language: php
 
-php:
-- 7.1
-- 7.0
-- 5.6
-
 # environment variable used in test suite
 env:
   global:

@@ -125,6 +125,13 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
         $this->assertArrayHasKey('trait_user[company_id]_trait_company[id]_fk', $foreignKeys);
     }
 
+    public function testAddColumnPivot()
+    {
+        $this->migration->addColumn('{{%company}}', 'users', $this->migration->pivot('{{%user}}'));
+        $this->tester->assertTableExist('{{%pv_company_users}}');
+        $this->migration->dropTable('{{%pv_company_users}}');
+    }
+
     public function testAddColumnDefault()
     {
         $this->migration->addColumn('{{%user}}', 'description', $this->migration->text());

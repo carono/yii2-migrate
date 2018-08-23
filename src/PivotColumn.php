@@ -126,19 +126,16 @@ class PivotColumn
             $this->getRefColumn() => $this->migrate->foreignKey($this->getRefTable()),
         ];
         $columnsInt = array_combine(array_keys($columns), [$this->migrate->integer(), $this->migrate->integer()]);
-        if ($this->migrate->db->driverName === 'mysql') {
-            $this->migrate->createTable($this->getName(), $columnsInt);
-            $this->migrate->addPrimaryKey(null, $this->getName(), array_keys($columns));
-            foreach ($columns as $name => $type) {
-                $type->sourceTable($this->getName())->sourceColumn($name);
-                $type->apply();
-            }
-        } else {
-            $this->migrate->createTable($this->getName(), $columns);
-            $this->migrate->addPrimaryKey(null, $this->getName(), array_keys($columns));
+
+        $this->migrate->createTable($this->getName(), $columnsInt);
+        $this->migrate->addPrimaryKey(null, $this->getName(), array_keys($columns));
+
+        foreach ($columns as $name => $type) {
+            $type->sourceTable($this->getName())->sourceColumn($name);
+            $type->apply();
         }
-        if ($this->_columns) {
-            $this->migrate->upNewColumns([$this->getName() => $this->_columns]);
+        if ($advancedColumns = $this->getColumns()) {
+            $this->migrate->upNewColumns([$this->getName() => $this->getColumns()]);
         }
     }
 
