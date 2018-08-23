@@ -83,4 +83,17 @@ class PivotColumnBaseTest extends \Codeception\Test\Unit
         $columns = \Yii::$app->db->getTableSchema('{{%pv_test_user_photos}}')->columnNames;
         $this->assertSame($expect, $columns);
     }
+
+    public function testColumnNames()
+    {
+        $pv = $this->getMigrate()->pivot('{{%test_photo}}')->sourceTable('{{%test_user}}')->setSuffix('photos2');
+        $pv->refColumn('ref_id');
+        $pv->sourceColumn('source_id');
+        $pv->apply();
+
+        $this->tester->assertColumnExist('{{%pv_test_user_photos2}}', 'ref_id');
+        $this->tester->assertColumnExist('{{%pv_test_user_photos2}}', 'source_id');
+
+        $pv->remove();
+    }
 }
