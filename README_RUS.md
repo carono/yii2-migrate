@@ -325,7 +325,7 @@ class m180712_120503_init extends Migration
     {
         return [
             '{{%company}}' => [
-                $this->index()->columns(['name'])->unique(true)
+                $this->index()->columns(['name'])->unique(true)->length(10)
             ],
         ];
     }

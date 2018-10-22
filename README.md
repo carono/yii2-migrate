@@ -212,7 +212,7 @@ $company->deletePivots(PvCompanyDirector::class);
 Save to a temporary link variable so that you can use them later
 ```php
 $company->storagePivot($user, PvCompanyDirector::class, ['hire_at' => '2010-01-01 00:00:00']);
-$users = $company->getStoragePivots(PvCompanyDirector::class)); // Список моделей, что добавили ранее
+$users = $company->getStoragePivots(PvCompanyDirector::class)); // The list of models that have been added earlier
 ```
 
 The preservation of the ties of a temporary variable.  
@@ -327,7 +327,7 @@ class m180712_120503_init extends Migration
     {
         return [
             '{{%company}}' => [
-                $this->index()->columns(['name'])->unique(true)
+                $this->index()->columns(['name'])->unique(true)->length(10)
             ],
         ];
     }

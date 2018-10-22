@@ -14,6 +14,13 @@ class IndexColumn
     protected $_name;
     protected $_columns;
     protected $_table;
+    protected $_length;
+
+    public function length($value)
+    {
+        $this->_length = $value;
+        return $this;
+    }
 
     /**
      * @param $migrate
@@ -104,7 +111,13 @@ class IndexColumn
 
     public function apply()
     {
-        $this->migrate->createIndex($this->formIndexName(), $this->_table, $this->_columns, $this->_unique);
+        $columns = $this->_columns;
+        if ($this->_length) {
+            foreach ($columns as $idx => $column) {
+                $columns[$idx] = "{$column}({$this->_length})";
+            }
+        }
+        $this->migrate->createIndex($this->formIndexName(), $this->_table, $columns, $this->_unique);
     }
 
     public function remove()

@@ -71,4 +71,9 @@ class IndexColumnBaseTest extends \Codeception\Test\Unit
         ];
         $this->assertSame($index, \Yii::$app->db->getSchema()->findUniqueIndexes($table));
     }
+
+    public function testIndexWithLength()
+    {
+        $this->getMigrate()->index()->table('{{%test_user}}')->columns(['name'])->length(10)->apply();
+    }
 }
