@@ -24,6 +24,8 @@ class PivotColumn
      * @var Migration
      */
     public $migrate;
+    public $column_type = \yii\db\Schema::TYPE_INTEGER;
+    public $column_length;
 
     /**
      * @return string
@@ -116,6 +118,26 @@ class PivotColumn
         $this->migrate->dropTable($this->getTableName());
     }
 
+    /**
+     * @param $value
+     * @return $this
+     */
+    public function setType($value)
+    {
+        $this->column_type = $value;
+        return $this;
+    }
+
+    /**
+     * @param $value
+     * @return $this
+     */
+    public function setLength($value)
+    {
+        $this->column_length = $value;
+        return $this;
+    }
+
     public function apply()
     {
         /**
@@ -125,7 +147,10 @@ class PivotColumn
             $this->getSourceColumn() => $this->migrate->foreignKey($this->getSourceTable()),
             $this->getRefColumn() => $this->migrate->foreignKey($this->getRefTable()),
         ];
-        $columnsInt = array_combine(array_keys($columns), [$this->migrate->integer(), $this->migrate->integer()]);
+        $columnsInt = array_combine(array_keys($columns), [
+            $this->migrate->db->getSchema()->createColumnSchemaBuilder($this->column_type, $this->column_length),
+            $this->migrate->db->getSchema()->createColumnSchemaBuilder($this->column_type, $this->column_length)
+        ]);
 
         $this->migrate->createTable($this->getTableName(), $columnsInt);
         $this->migrate->addPrimaryKey(null, $this->getTableName(), array_keys($columns));
