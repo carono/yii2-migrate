@@ -11,7 +11,6 @@ use yii\helpers\ArrayHelper;
  * Trait PivotTrait
  *
  * @package carono\yii2migrate\traits
- * @mixin ActiveRecord
  */
 trait PivotTrait
 {
