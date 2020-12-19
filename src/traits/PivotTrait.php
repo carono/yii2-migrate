@@ -239,7 +239,7 @@ trait PivotTrait
             return $field;
         }
 
-        $pks = self::getDb()->getTableSchema($pivotClass::tableName())->primaryKey;
+        $pks = $pivotClass::getDb()->getTableSchema($pivotClass::tableName())->primaryKey;
         return $slave ? $pks[1] : $pks[0];
     }
 
@@ -250,8 +250,8 @@ trait PivotTrait
      */
     private function getPkFieldByModel($model, $pivotClass)
     {
-        $pks = self::getDb()->getTableSchema($pivotClass::tableName())->primaryKey;
-        $fks = self::formFkKeys(self::getDb()->getTableSchema($pivotClass::tableName())->foreignKeys);
+        $pks = $pivotClass::getDb()->getTableSchema($pivotClass::tableName())->primaryKey;
+        $fks = static::formFkKeys($pivotClass::getDb()->getTableSchema($pivotClass::tableName())->foreignKeys);
         $fks = array_values(array_filter($fks, function ($data) use ($pks) {
             return in_array($data['field'], $pks, true);
         }));
