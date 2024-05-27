@@ -21,9 +21,9 @@ trait PivotTrait
      *
      * @return mixed
      */
-    public function deletePivots($pivotClass)
+    public function deletePivots($pivotClass, $condition = [])
     {
-        return $pivotClass::deleteAll([$this->getPivotMainPkField($this, $pivotClass) => $this->getMainPk()]);
+        return $pivotClass::deleteAll(array_merge([$this->getPivotMainPkField($this, $pivotClass) => $this->getMainPk()], $condition));
     }
 
     /**
@@ -142,11 +142,11 @@ trait PivotTrait
     /**
      * @param bool $clear
      */
-    public function savePivots($clear = false)
+    public function savePivots($clear = false, $condition = [])
     {
         foreach ($this->getPivotStorage() as $pivotClass => $items) {
             if ($clear) {
-                $this->deletePivots($pivotClass);
+                $this->deletePivots($pivotClass, $condition);
             }
             foreach ($items as $item) {
                 $this->addPivot($item['model'], $pivotClass, $item['attributes']);
@@ -187,12 +187,12 @@ trait PivotTrait
      * @param string|ActiveRecord $pivotClass
      * @return mixed
      */
-    public function deletePivot($model, $pivotClass)
+    public function deletePivot($model, $pivotClass, $condition = [])
     {
-        return $pivotClass::deleteAll([
+        return $pivotClass::deleteAll(array_merge([
             $this->getPivotMainPkField($this, $pivotClass) => $this->getMainPk(),
             $this->getPivotSlavePkField($model, $pivotClass) => $model->{$model->primaryKey()[0]}
-        ]);
+        ], $condition));
     }
 
 
