@@ -23,6 +23,7 @@ class IndexColumnTest extends \Codeception\Test\Unit
 
     /**
      * @param string $db
+     *
      * @return Migration
      */
     protected function getMigrate()
@@ -30,6 +31,7 @@ class IndexColumnTest extends \Codeception\Test\Unit
         if ($this->_migrate) {
             return $this->_migrate;
         }
+
         return $this->_migrate = new \carono\yii2migrate\Migration(['db' => \Yii::$app->db]);
     }
 
@@ -105,7 +107,7 @@ class IndexColumnTest extends \Codeception\Test\Unit
         $index = new IndexColumn();
         $columns = [
             'value' => $this->getMigrate()->string(),
-            'data' => $this->getMigrate()->integer()
+            'data'  => $this->getMigrate()->integer(),
         ];
         $index->columns($columns);
         $this->assertSame($columns, $index->getColumns());

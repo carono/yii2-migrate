@@ -8,9 +8,7 @@ use yii\db\ActiveRecord;
 use yii\helpers\ArrayHelper;
 
 /**
- * Trait PivotTrait
- *
- * @package carono\yii2migrate\traits
+ * Trait PivotTrait.
  */
 trait PivotTrait
 {
@@ -49,8 +47,9 @@ trait PivotTrait
     }
 
     /**
-     * @param ActiveRecord|null $model
+     * @param ActiveRecord|null   $model
      * @param string|ActiveRecord $pivotClass
+     *
      * @return array
      */
     private function getPivotCondition($model, $pivotClass)
@@ -61,13 +60,15 @@ trait PivotTrait
             $slavePk = $this->getPivotSlavePkField($model, $pivotClass);
             $condition[$slavePk] = $model->getAttribute($model->primaryKey()[0]);
         }
+
         return $condition;
     }
 
     /**
-     * @param ActiveRecord $model
+     * @param ActiveRecord        $model
      * @param string|ActiveRecord $pivotClass
-     * @param array $condition
+     * @param array               $condition
+     *
      * @return ActiveRecord|null
      */
     public function getPivot($model, $pivotClass, $condition = [])
@@ -77,7 +78,8 @@ trait PivotTrait
 
     /**
      * @param string|ActiveRecord $pivotClass
-     * @param array $condition
+     * @param array               $condition
+     *
      * @return ActiveRecord[]
      */
     public function getPivots($pivotClass, $condition = [])
@@ -86,8 +88,9 @@ trait PivotTrait
     }
 
     /**
-     * @param ActiveRecord $model
+     * @param ActiveRecord        $model
      * @param string|ActiveRecord $pivotClass
+     *
      * @return ActiveQuery
      */
     public function findPivot($model, $pivotClass)
@@ -97,6 +100,7 @@ trait PivotTrait
 
     /**
      * @param string|ActiveRecord $pivotClass
+     *
      * @return ActiveQuery
      */
     public function findPivots($pivotClass)
@@ -114,20 +118,20 @@ trait PivotTrait
 
     /**
      * @param ActiveRecord[] $models
-     * @param string $pivotClass
-     * @param array $attributes
+     * @param string         $pivotClass
+     * @param array          $attributes
      */
     public function storagePivots($models, $pivotClass, $attributes = [])
     {
-        foreach ((array)$models as $model) {
+        foreach ((array) $models as $model) {
             $this->storagePivot($model, $pivotClass, $attributes);
         }
     }
 
     /**
      * @param ActiveRecord $model
-     * @param string $pivotClass
-     * @param array $attributes
+     * @param string       $pivotClass
+     * @param array        $attributes
      */
     public function storagePivot($model, $pivotClass, $attributes = [])
     {
@@ -136,7 +140,7 @@ trait PivotTrait
 
     public function getStoragePivotAttribute($model, $pivotClass)
     {
-        return ArrayHelper::getValue($this->_storage, $pivotClass . '.' . spl_object_hash($model) . '.attributes', []);
+        return ArrayHelper::getValue($this->_storage, $pivotClass.'.'.spl_object_hash($model).'.attributes', []);
     }
 
     /**
@@ -155,18 +159,20 @@ trait PivotTrait
     }
 
     /**
-     * @param $model
-     * @param $pivotClass
+     * @param       $model
+     * @param       $pivotClass
      * @param array $attributes
-     * @return array|null|ActiveRecord
+     *
      * @throws \Exception
+     *
+     * @return array|null|ActiveRecord
      */
     public function addPivot($model, $pivotClass, $attributes = [])
     {
         /**
          * @var ActiveRecord $pv
          */
-        $pv = new $pivotClass;
+        $pv = new $pivotClass();
         $attributes = $attributes ? $attributes : $this->getStoragePivotAttribute($model, $pivotClass);
         $condition = $this->getPivotCondition($model, $pivotClass);
         if ($find = (new ActiveQuery($pivotClass))->andWhere($condition)->one()) {
@@ -174,27 +180,29 @@ trait PivotTrait
                 $find->setAttributes($attributes, false);
                 $find->save();
             }
+
             return $find;
         }
 
         $pv->setAttributes(array_merge($condition, $attributes), false);
         $pv->save();
+
         return $pv;
     }
 
     /**
-     * @param ActiveRecord $model
+     * @param ActiveRecord        $model
      * @param string|ActiveRecord $pivotClass
+     *
      * @return mixed
      */
     public function deletePivot($model, $pivotClass, $condition = [])
     {
         return $pivotClass::deleteAll(array_merge([
-            $this->getPivotMainPkField($this, $pivotClass) => $this->getMainPk(),
-            $this->getPivotSlavePkField($model, $pivotClass) => $model->{$model->primaryKey()[0]}
+            $this->getPivotMainPkField($this, $pivotClass)   => $this->getMainPk(),
+            $this->getPivotSlavePkField($model, $pivotClass) => $model->{$model->primaryKey()[0]},
         ], $condition));
     }
-
 
     /**
      * @return mixed
@@ -208,8 +216,9 @@ trait PivotTrait
     }
 
     /**
-     * @param ActiveRecord $model
+     * @param ActiveRecord        $model
      * @param string|ActiveRecord $pivotClass
+     *
      * @return string
      */
     protected function getPivotMainPkField($model, $pivotClass)
@@ -218,8 +227,9 @@ trait PivotTrait
     }
 
     /**
-     * @param $model
+     * @param                     $model
      * @param string|ActiveRecord $pivotClass
+     *
      * @return string
      */
     protected function getPivotSlavePkField($model, $pivotClass)
@@ -228,9 +238,10 @@ trait PivotTrait
     }
 
     /**
-     * @param ActiveRecord $model
+     * @param ActiveRecord        $model
      * @param ActiveRecord|string $pivotClass
-     * @param bool $slave
+     * @param bool                $slave
+     *
      * @return int|null|string
      */
     private function getPivotPkField($model, $pivotClass, $slave = false)
@@ -240,12 +251,14 @@ trait PivotTrait
         }
 
         $pks = $pivotClass::getDb()->getTableSchema($pivotClass::tableName())->primaryKey;
+
         return $slave ? $pks[1] : $pks[0];
     }
 
     /**
-     * @param ActiveRecord $model
+     * @param ActiveRecord        $model
      * @param ActiveRecord|string $pivotClass
+     *
      * @return string
      */
     private function getPkFieldByModel($model, $pivotClass)
@@ -266,11 +279,13 @@ trait PivotTrait
                 $field = $fk['field'];
             }
         }
+
         return $field;
     }
 
     /**
      * @param $array
+     *
      * @return array
      */
     private static function formFkKeys($array)
@@ -278,11 +293,12 @@ trait PivotTrait
         $result = [];
         foreach ($array as $key => $data) {
             $result[$key] = [
-                'table' => ArrayHelper::remove($data, 0),
-                'field' => key($data),
+                'table'     => ArrayHelper::remove($data, 0),
+                'field'     => key($data),
                 'reference' => current($data),
             ];
         }
+
         return $result;
     }
 }

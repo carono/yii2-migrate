@@ -1,18 +1,19 @@
 <?php
 
-use \carono\yii2migrate\helpers\SchemaHelper;
+use carono\yii2migrate\helpers\SchemaHelper;
 
 /**
- * Inherited Methods
- * @method void wantToTest($text)
- * @method void wantTo($text)
- * @method void execute($callable)
- * @method void expectTo($prediction)
- * @method void expect($prediction)
- * @method void amGoingTo($argumentation)
- * @method void am($role)
- * @method void lookForwardTo($achieveValue)
- * @method void comment($description)
+ * Inherited Methods.
+ *
+ * @method void                    wantToTest($text)
+ * @method void                    wantTo($text)
+ * @method void                    execute($callable)
+ * @method void                    expectTo($prediction)
+ * @method void                    expect($prediction)
+ * @method void                    amGoingTo($argumentation)
+ * @method void                    am($role)
+ * @method void                    lookForwardTo($achieveValue)
+ * @method void                    comment($description)
  * @method \Codeception\Lib\Friend haveFriend($name, $actorClass = NULL)
  *
  * @SuppressWarnings(PHPMD)
@@ -22,18 +23,16 @@ class UnitTester extends \Codeception\Actor
     use _generated\UnitTesterActions;
 
     /**
-     * Define custom actions here
+     * Define custom actions here.
      */
-
     public function assertUniqueIndexByColumnsExist($table, $column)
     {
         $index = SchemaHelper::findUniqueIndexes(\Yii::$app->db, $table);
         $result = array_filter($index, function ($index) use ($column) {
-            return $index->columnNames === (array)$column;
+            return $index->columnNames === (array) $column;
         });
         $this->assertNotEmpty($result);
     }
-
 
     public function assertTableExist($table)
     {
@@ -49,7 +48,7 @@ class UnitTester extends \Codeception\Actor
     {
         $foreignKey = SchemaHelper::findTableForeignKeys(\Yii::$app->db, $table);
         $result = array_filter($foreignKey, function ($index) use ($column) {
-            return $index->columnNames === (array)$column;
+            return $index->columnNames === (array) $column;
         });
         $this->assertNotEmpty($result);
     }
@@ -58,7 +57,7 @@ class UnitTester extends \Codeception\Actor
     {
         $foreignKey = SchemaHelper::findTableForeignKeys(\Yii::$app->db, $table);
         $result = array_filter($foreignKey, function ($index) use ($column) {
-            return $index->columnNames === (array)$column;
+            return $index->columnNames === (array) $column;
         });
         $this->assertEmpty($result);
     }
@@ -77,7 +76,7 @@ class UnitTester extends \Codeception\Actor
     {
         $index = SchemaHelper::findNonUniqueIndexes(\Yii::$app->db, $table);
         $result = array_filter($index, function ($index) use ($column) {
-            return $index->columnNames === (array)$column;
+            return $index->columnNames === (array) $column;
         });
         $this->assertEmpty($result);
     }
@@ -86,7 +85,7 @@ class UnitTester extends \Codeception\Actor
     {
         $index = SchemaHelper::findNonUniqueIndexes(\Yii::$app->db, $table);
         $result = array_filter($index, function ($index) use ($column) {
-            return $index->columnNames === (array)$column;
+            return $index->columnNames === (array) $column;
         });
         $this->assertNotEmpty($result);
     }
@@ -95,7 +94,7 @@ class UnitTester extends \Codeception\Actor
     {
         $index = SchemaHelper::findUniqueIndexes(\Yii::$app->db, $table);
         $result = array_filter($index, function ($index) use ($column) {
-            return $index->columnNames === (array)$column;
+            return $index->columnNames === (array) $column;
         });
         $this->assertEmpty($result);
     }
@@ -126,6 +125,7 @@ class UnitTester extends \Codeception\Actor
 
     /**
      * @param $index
+     *
      * @return \tests\yii2migrate\models\User
      */
     public function grabUser($index)
@@ -135,6 +135,7 @@ class UnitTester extends \Codeception\Actor
 
     /**
      * @param $index
+     *
      * @return \tests\yii2migrate\models\Company
      */
     public function grabCompany($index)

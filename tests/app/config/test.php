@@ -1,13 +1,13 @@
 <?php
 
 return [
-    'id' => 'basic',
+    'id'       => 'basic',
     'basePath' => dirname(__DIR__),
     'language' => 'en-US',
-    'aliases' => [
+    'aliases'  => [
         '@tests/yii2migrate' => dirname(dirname(__DIR__)),
-        '@vendor' => VENDOR_DIR,
-        '@bower' => VENDOR_DIR . '/bower-asset',
+        '@vendor'            => VENDOR_DIR,
+        '@bower'             => VENDOR_DIR.'/bower-asset',
     ],
     'components' => [
         'mailer' => [
@@ -17,7 +17,7 @@ return [
             'showScriptName' => true,
         ],
         'request' => [
-            'cookieValidationKey' => 'test',
+            'cookieValidationKey'  => 'test',
             'enableCsrfValidation' => false,
         ],
     ],

@@ -23,6 +23,7 @@ class PivotColumnTest extends \Codeception\Test\Unit
 
     /**
      * @param string $db
+     *
      * @return Migration
      */
     protected function getMigrate()
@@ -30,6 +31,7 @@ class PivotColumnTest extends \Codeception\Test\Unit
         if ($this->_migrate) {
             return $this->_migrate;
         }
+
         return $this->_migrate = new \carono\yii2migrate\Migration(['db' => \Yii::$app->db]);
     }
 
@@ -44,7 +46,7 @@ class PivotColumnTest extends \Codeception\Test\Unit
     public function testToString()
     {
         $pivot = new PivotColumn();
-        $this->assertSame($pivot->getPrefix(), (string)$pivot);
+        $this->assertSame($pivot->getPrefix(), (string) $pivot);
     }
 
     public function testSetSuffix()

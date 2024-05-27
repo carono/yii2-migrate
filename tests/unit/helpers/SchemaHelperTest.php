@@ -26,8 +26,8 @@ class SchemaHelperTest extends \Codeception\Test\Unit
     {
         $migrate = new Migration(['db' => \Yii::$app->db]);
         $migrate->createTable('{{%test}}', [
-            'id' => $migrate->primaryKey(),
-            'name' => $migrate->integer()->defaultValue(0)
+            'id'   => $migrate->primaryKey(),
+            'name' => $migrate->integer()->defaultValue(0),
         ]);
         $migrate->createIndex('pfx_test:name_idx', '{{%test}}', 'name');
         $this->assertSame('pfx_test:name_idx', current(SchemaHelper::findNonUniqueIndexes(\Yii::$app->db, 'pfx_test'))->name);
@@ -39,7 +39,7 @@ class SchemaHelperTest extends \Codeception\Test\Unit
     public function testExpandTablePrefix()
     {
         foreach ($this->prefixes as $prefix) {
-            $this->assertSame($prefix . 'table', SchemaHelper::expandTablePrefix('{{%table}}', $prefix));
+            $this->assertSame($prefix.'table', SchemaHelper::expandTablePrefix('{{%table}}', $prefix));
         }
         $this->assertSame('pfx_table', SchemaHelper::expandTablePrefix('pfx_table', 'pfx_'));
         $this->assertSame('pfx_table', SchemaHelper::expandTablePrefix('pfx_table', 'pfx_wrong'));
@@ -48,7 +48,7 @@ class SchemaHelperTest extends \Codeception\Test\Unit
     public function testCollapseTablePrefix()
     {
         foreach ($this->prefixes as $prefix) {
-            $this->assertSame('{{%table}}', SchemaHelper::collapseTablePrefix($prefix . 'table', $prefix));
+            $this->assertSame('{{%table}}', SchemaHelper::collapseTablePrefix($prefix.'table', $prefix));
         }
     }
 

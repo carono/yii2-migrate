@@ -16,6 +16,7 @@ class ForeignKeyColumnBaseTest extends \Codeception\Test\Unit
 
     /**
      * @param string $db
+     *
      * @return Migration
      */
     protected function getMigrate()
@@ -23,6 +24,7 @@ class ForeignKeyColumnBaseTest extends \Codeception\Test\Unit
         if ($this->_migrate) {
             return $this->_migrate;
         }
+
         return $this->_migrate = new \carono\yii2migrate\Migration(['db' => \Yii::$app->db]);
     }
 
@@ -30,8 +32,8 @@ class ForeignKeyColumnBaseTest extends \Codeception\Test\Unit
     {
         $migrate = $this->getMigrate();
         $migrate->createTable('{{%test_source}}', [
-            'id' => $migrate->primaryKey(),
-            'ref_id' => $migrate->integer()->defaultValue(0)
+            'id'     => $migrate->primaryKey(),
+            'ref_id' => $migrate->integer()->defaultValue(0),
         ]);
         $migrate->createTable('{{%test_ref}}', ['id' => $migrate->primaryKey()]);
     }
@@ -46,6 +48,7 @@ class ForeignKeyColumnBaseTest extends \Codeception\Test\Unit
     protected function getFk()
     {
         $migrate = $this->getMigrate();
+
         return (new ForeignKeyColumn($migrate->integer()))
             ->setMigrate($migrate)
             ->sourceTable('{{%test_source}}')

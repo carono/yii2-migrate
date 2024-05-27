@@ -2,15 +2,12 @@
 
 namespace carono\yii2migrate;
 
-
 use carono\yii2migrate\exceptions\ForeignKeyException;
 use carono\yii2migrate\helpers\SchemaHelper;
 use yii\db\ColumnSchemaBuilder;
 
 /**
- * Class ForeignKeyColumn
- *
- * @package carono\yii2installer
+ * Class ForeignKeyColumn.
  */
 class ForeignKeyColumn extends ColumnSchemaBuilder
 {
@@ -34,22 +31,26 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
 
     /**
      * @param $migrate
+     *
      * @return $this
      */
     public function setMigrate($migrate)
     {
         $this->migrate = $migrate;
         $this->db = $migrate->db;
+
         return $this;
     }
 
     /**
      * @param $value
+     *
      * @return $this
      */
     public function setName($value)
     {
         $this->_name = $value;
+
         return $this;
     }
 
@@ -69,6 +70,7 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
             $name = $this->formName($this->getSourceTable(), $this->getSourceColumn(), $this->getRefTable(), $this->getRefColumn());
         }
         $name = $this->migrate->expandTablePrefix($name);
+
         return $name;
     }
 
@@ -78,8 +80,13 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
     public function apply()
     {
         $this->migrate->addForeignKey(
-            $this->getName(), $this->getSourceTable(), $this->getSourceColumn(), $this->getRefTable(),
-            $this->getRefColumn(), $this->getOnDelete(), $this->getOnUpdate()
+            $this->getName(),
+            $this->getSourceTable(),
+            $this->getSourceColumn(),
+            $this->getRefTable(),
+            $this->getRefColumn(),
+            $this->getOnDelete(),
+            $this->getOnUpdate()
         );
     }
 
@@ -98,8 +105,10 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
 
     /**
      * @param $table
-     * @return mixed
+     *
      * @throws ForeignKeyException
+     *
+     * @return mixed
      */
     protected function getRefColumnByTable($table)
     {
@@ -107,9 +116,10 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
             throw new ForeignKeyException("Ref table '$table' not found");
         }
         $pk = current($this->migrate->db->getTableSchema($table)->primaryKey);
-        if (!$pk){
+        if (!$pk) {
             throw new ForeignKeyException("Primary key not found in ref table '$table'");
         }
+
         return $pk;
     }
 
@@ -121,6 +131,7 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
         if (!$this->_refColumn && $this->migrate) {
             $this->_refColumn = $this->getRefColumnByTable($this->getRefTable());
         }
+
         return $this->_refColumn;
     }
 
@@ -158,21 +169,25 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
 
     /**
      * @param $string
+     *
      * @return $this
      */
     public function onDelete($string)
     {
         $this->_onDelete = $string;
+
         return $this;
     }
 
     /**
      * @param $string
+     *
      * @return $this
      */
     public function onUpdate($string)
     {
         $this->_onUpdate = $string;
+
         return $this;
     }
 
@@ -258,21 +273,25 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
 
     /**
      * @param $name
+     *
      * @return $this
      */
     public function refTable($name)
     {
         $this->_refTable = $name;
+
         return $this;
     }
 
     /**
      * @param $name
+     *
      * @return $this
      */
     public function sourceColumn($name)
     {
         $this->_sourceColumn = $name;
+
         return $this;
     }
 
@@ -281,12 +300,14 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
      * @param $column
      * @param $refTable
      * @param $refColumn
+     *
      * @return string
      */
     public function formName($table, $column, $refTable, $refColumn)
     {
         $table = SchemaHelper::removeSchema($this->migrate->expandTablePrefix($table));
         $refTable = SchemaHelper::removeSchema($this->migrate->expandTablePrefix($refTable));
+
         return "{$table}[{$column}]_{$refTable}[{$refColumn}]_fk";
     }
 
@@ -298,16 +319,19 @@ class ForeignKeyColumn extends ColumnSchemaBuilder
     public function sourceTable($name)
     {
         $this->_sourceTable = $name;
+
         return $this;
     }
 
     /**
      * @param $name
+     *
      * @return $this
      */
     public function refColumn($name)
     {
         $this->_refColumn = $name;
+
         return $this;
     }
 }

@@ -3,7 +3,6 @@
 namespace src;
 
 use carono\yii2migrate\helpers\SchemaHelper;
-use carono\yii2migrate\IndexColumn;
 use carono\yii2migrate\Migration;
 
 class IndexColumnBaseTest extends \Codeception\Test\Unit
@@ -18,9 +17,9 @@ class IndexColumnBaseTest extends \Codeception\Test\Unit
     {
         $migrate = $this->getMigrate();
         $migrate->createTable('{{%test_user}}', [
-            'id' => $migrate->primaryKey(),
-            'name' => $migrate->string(),
-            'login' => $migrate->string()
+            'id'    => $migrate->primaryKey(),
+            'name'  => $migrate->string(),
+            'login' => $migrate->string(),
         ]);
     }
 
@@ -31,6 +30,7 @@ class IndexColumnBaseTest extends \Codeception\Test\Unit
 
     /**
      * @param string $db
+     *
      * @return Migration
      */
     protected function getMigrate()
@@ -38,6 +38,7 @@ class IndexColumnBaseTest extends \Codeception\Test\Unit
         if ($this->_migrate) {
             return $this->_migrate;
         }
+
         return $this->_migrate = new \carono\yii2migrate\Migration(['db' => \Yii::$app->db]);
     }
 
@@ -67,7 +68,7 @@ class IndexColumnBaseTest extends \Codeception\Test\Unit
         $this->getMigrate()->index()->table('{{%test_user}}')->columns($columns)->unique(true)->apply();
         $table = \Yii::$app->db->getTableSchema('{{%test_user}}');
         $index = [
-            'pfx_test_user:name:login_unq' => $columns
+            'pfx_test_user:name:login_unq' => $columns,
         ];
         $this->assertSame($index, \Yii::$app->db->getSchema()->findUniqueIndexes($table));
     }

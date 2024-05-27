@@ -2,7 +2,6 @@
 
 namespace src;
 
-use carono\yii2migrate\helpers\SchemaHelper;
 use carono\yii2migrate\Migration;
 
 class PivotColumnBaseTest extends \Codeception\Test\Unit
@@ -40,6 +39,7 @@ class PivotColumnBaseTest extends \Codeception\Test\Unit
 
     /**
      * @param string $db
+     *
      * @return Migration
      */
     protected function getMigrate()
@@ -47,6 +47,7 @@ class PivotColumnBaseTest extends \Codeception\Test\Unit
         if ($this->_migrate) {
             return $this->_migrate;
         }
+
         return $this->_migrate = new \carono\yii2migrate\Migration(['db' => \Yii::$app->db]);
     }
 
@@ -67,7 +68,7 @@ class PivotColumnBaseTest extends \Codeception\Test\Unit
     {
         $expect = [
             'test_user_id',
-            'test_photo_id'
+            'test_photo_id',
         ];
         $primaryKeys = \Yii::$app->db->getTableSchema('{{%pv_test_user_photos}}')->primaryKey;
         $this->assertSame($expect, $primaryKeys);
@@ -78,7 +79,7 @@ class PivotColumnBaseTest extends \Codeception\Test\Unit
         $expect = [
             'test_user_id',
             'test_photo_id',
-            'value'
+            'value',
         ];
         $columns = \Yii::$app->db->getTableSchema('{{%pv_test_user_photos}}')->columnNames;
         $this->assertSame($expect, $columns);

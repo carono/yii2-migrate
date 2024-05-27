@@ -6,9 +6,7 @@ use carono\yii2migrate\helpers\SchemaHelper;
 use yii\helpers\Inflector;
 
 /**
- * Class PivotColumn
- *
- * @package carono\yii2installer
+ * Class PivotColumn.
  */
 class PivotColumn
 {
@@ -47,41 +45,49 @@ class PivotColumn
 
     /**
      * @param $migrate
+     *
      * @return $this
      */
     public function setMigrate($migrate)
     {
         $this->migrate = $migrate;
+
         return $this;
     }
 
     /**
      * @param $value
+     *
      * @return $this
      */
     public function setSuffix($value)
     {
         $this->_suffix = $value;
+
         return $this;
     }
 
     /**
      * @param $name
+     *
      * @return $this
      */
     public function tableName($name)
     {
         $this->_tableName = $name;
+
         return $this;
     }
 
     /**
      * @param array $columns
+     *
      * @return $this
      */
     public function columns($columns)
     {
         $this->_columns = $columns;
+
         return $this;
     }
 
@@ -99,7 +105,8 @@ class PivotColumn
     public function getTableName()
     {
         $name = $this->_tableName ?: implode('_', [$this->getPrefix(), $this->_sourceTable, $this->_suffix]);
-        return '{{%' . SchemaHelper::expandTablePrefix($name, '') . '}}';
+
+        return '{{%'.SchemaHelper::expandTablePrefix($name, '').'}}';
     }
 
     /**
@@ -120,21 +127,25 @@ class PivotColumn
 
     /**
      * @param $value
+     *
      * @return $this
      */
     public function setType($value)
     {
         $this->column_type = $value;
+
         return $this;
     }
 
     /**
      * @param $value
+     *
      * @return $this
      */
     public function setLength($value)
     {
         $this->column_length = $value;
+
         return $this;
     }
 
@@ -145,11 +156,11 @@ class PivotColumn
          */
         $columns = [
             $this->getSourceColumn() => $this->migrate->foreignKey($this->getSourceTable()),
-            $this->getRefColumn() => $this->migrate->foreignKey($this->getRefTable()),
+            $this->getRefColumn()    => $this->migrate->foreignKey($this->getRefTable()),
         ];
         $columnsInt = array_combine(array_keys($columns), [
             $this->migrate->db->getSchema()->createColumnSchemaBuilder($this->column_type, $this->column_length),
-            $this->migrate->db->getSchema()->createColumnSchemaBuilder($this->column_type, $this->column_length)
+            $this->migrate->db->getSchema()->createColumnSchemaBuilder($this->column_type, $this->column_length),
         ]);
 
         $this->migrate->createTable($this->getTableName(), $columnsInt);
@@ -184,8 +195,9 @@ class PivotColumn
         }
         $refColumn = SchemaHelper::expandTablePrefix($name, '');
         if (strtolower($refColumn) === strtolower($this->getSourceColumn())) {
-            $refColumn = Inflector::singularize($this->_suffix) . '_id';
+            $refColumn = Inflector::singularize($this->_suffix).'_id';
         }
+
         return $refColumn;
     }
 
@@ -207,46 +219,55 @@ class PivotColumn
         } else {
             $name = $this->_sourceColumn;
         }
+
         return SchemaHelper::expandTablePrefix($name, '');
     }
 
     /**
      * @param $name
+     *
      * @return $this
      */
     public function refTable($name)
     {
         $this->_refTable = $name;
+
         return $this;
     }
 
     /**
      * @param $name
+     *
      * @return $this
      */
     public function sourceColumn($name)
     {
         $this->_sourceColumn = $name;
+
         return $this;
     }
 
     /**
      * @param $name
+     *
      * @return $this
      */
     public function sourceTable($name)
     {
         $this->_sourceTable = $name;
+
         return $this;
     }
 
     /**
      * @param $name
+     *
      * @return $this
      */
     public function refColumn($name)
     {
         $this->_refColumn = $name;
+
         return $this;
     }
 }

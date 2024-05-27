@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This class is generated using the package carono/codegen
+ * This class is generated using the package carono/codegen.
  */
 
 namespace tests\yii2migrate\models;

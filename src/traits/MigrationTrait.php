@@ -1,6 +1,5 @@
 <?php
 
-
 namespace carono\yii2migrate\traits;
 
 use carono\yii2migrate\ForeignKeyColumn;
@@ -14,9 +13,8 @@ use yii\db\Schema;
 use yii\helpers\ArrayHelper;
 
 /**
- * Trait MigrationTrait
+ * Trait MigrationTrait.
  *
- * @package carono\yii2migrate\traits
  * @mixin Migration
  */
 trait MigrationTrait
@@ -24,11 +22,11 @@ trait MigrationTrait
     private static $tableOptions = '@tableOptions';
 
     /**
-     * @param      $refTable
-     * @param null $refColumn
-     *
+     * @param        $refTable
+     * @param null   $refColumn
      * @param string $type
-     * @param null $length
+     * @param null   $length
+     *
      * @return ForeignKeyColumn
      */
     public function foreignKey($refTable = null, $refColumn = null, $type = Schema::TYPE_INTEGER, $length = null)
@@ -38,7 +36,8 @@ trait MigrationTrait
 
     /**
      * @param array $columns
-     * @param bool $isUnique
+     * @param bool  $isUnique
+     *
      * @return IndexColumn
      */
     public function index($columns = [], $isUnique = false)
@@ -66,10 +65,10 @@ trait MigrationTrait
     }
 
     /**
-     * @param string $name
-     * @param string $table
+     * @param string       $name
+     * @param string       $table
      * @param array|string $columns
-     * @param bool $unique
+     * @param bool         $unique
      */
     public function createIndex($name, $table, $columns, $unique = false)
     {
@@ -84,8 +83,10 @@ trait MigrationTrait
 
     /**
      * @param ColumnSchema $column
-     * @return $this|ColumnSchemaBuilder
+     *
      * @throws \Exception
+     *
+     * @return $this|ColumnSchemaBuilder
      */
     public function columnSchemaToBuilder(ColumnSchema $column)
     {
@@ -111,7 +112,7 @@ trait MigrationTrait
                 break;
             case 'smallint':
                 if ($size === 1) {
-                    $default = (boolean)$default;
+                    $default = (bool) $default;
                     $builder = $this->boolean();
                 } else {
                     $builder = $this->smallInteger($size);
@@ -134,11 +135,13 @@ trait MigrationTrait
             $builder->notNull();
         }
         $builder->comment($column->comment);
+
         return $builder;
     }
 
     /**
      * @param $name
+     *
      * @return mixed
      */
     public function expandTablePrefix($name)
@@ -148,14 +151,15 @@ trait MigrationTrait
 
     /**
      * @param string $table
-     * @param array $columns
-     * @param null $options
+     * @param array  $columns
+     * @param null   $options
+     *
      * @throws \Exception
      */
     public function createTable($table, $columns, $options = null)
     {
         /**
-         * @var PivotColumn[] $pvs
+         * @var PivotColumn[]      $pvs
          * @var ForeignKeyColumn[] $fks
          */
         echo "    > create table $table ...";
@@ -167,12 +171,11 @@ trait MigrationTrait
         $options = $this->getTableOptionsFromArray(ArrayHelper::remove($columns, self::$tableOptions, []), $options);
 
         foreach ($columns as $column => &$type) {
-
             if ($type instanceof ColumnSchema) {
                 $column = is_numeric($column) ? $type->name : $column;
                 $type = $this->columnSchemaToBuilder($type);
             }
-            if ((string)$type === (string)$this->primaryKey()) {
+            if ((string) $type === (string) $this->primaryKey()) {
                 $pks[] = $column;
             }
             if ($type instanceof ForeignKeyColumn) {
@@ -218,17 +221,17 @@ trait MigrationTrait
             echo '  ';
             $pv->apply();
         }
-        echo ' done (time: ' . sprintf('%.3f', microtime(true) - $time) . "s)\n";
+        echo ' done (time: '.sprintf('%.3f', microtime(true) - $time)."s)\n";
     }
 
     /**
-     * @param string $name
-     * @param string $table
+     * @param string       $name
+     * @param string       $table
      * @param array|string $columns
-     * @param string $refTable
+     * @param string       $refTable
      * @param array|string $refColumns
-     * @param null $delete
-     * @param null $update
+     * @param null         $delete
+     * @param null         $update
      */
     public function addForeignKey($name, $table, $columns, $refTable, $refColumns, $delete = null, $update = null)
     {
@@ -312,7 +315,7 @@ trait MigrationTrait
 
     /**
      * @param array $columns
-     * @param bool $revert
+     * @param bool  $revert
      */
     protected function _applyNewColumns($columns = [], $revert = false)
     {
@@ -359,6 +362,7 @@ trait MigrationTrait
                 $this->dropForeignKey($key, $table);
             }
         }
+
         return parent::dropColumn($table, $column);
     }
 
@@ -372,7 +376,7 @@ trait MigrationTrait
 
     /**
      * @param array $array
-     * @param null $tableOptions
+     * @param null  $tableOptions
      */
     public function upNewTables($array = [], $tableOptions = null)
     {
@@ -412,7 +416,7 @@ trait MigrationTrait
     }
 
     /**
-     * @param $indexes
+     * @param      $indexes
      * @param bool $revert
      */
     protected function _applyNewIndex($indexes, $revert = false)
@@ -452,6 +456,7 @@ trait MigrationTrait
     /**
      * @param array|string $items
      * @param string|array $default
+     *
      * @return array|mixed|string
      */
     private function getTableOptionsFromArray($items, $default = '')
@@ -476,7 +481,7 @@ trait MigrationTrait
     }
 
     /**
-     * @param $tables
+     * @param      $tables
      * @param bool $revert
      * @param null $tableOptions
      */
@@ -503,6 +508,7 @@ trait MigrationTrait
      * @param $columns
      * @param $refTable
      * @param $refColumns
+     *
      * @return string
      */
     public function formFkName($table, $columns, $refTable, $refColumns)
@@ -511,10 +517,11 @@ trait MigrationTrait
     }
 
     /**
-     * @param $table
-     * @param $columns
+     * @param        $table
+     * @param        $columns
      * @param string $suffix
      * @param string $tablePrefix
+     *
      * @return string
      */
     public static function formPkIndexName($table, $columns, $suffix = '_pk', $tablePrefix = '')
@@ -523,17 +530,19 @@ trait MigrationTrait
     }
 
     /**
-     * @param $table
-     * @param $columns
+     * @param        $table
+     * @param        $columns
      * @param string $suffix
      * @param string $tablePrefix
+     *
      * @return string
      */
     public static function formIndexName($table, $columns, $suffix = '_idx', $tablePrefix = '')
     {
         $table = SchemaHelper::expandTablePrefix($table, $tablePrefix);
         $table = SchemaHelper::removeSchema($table);
-        $column = implode(':', array_map('trim', (array)$columns));
+        $column = implode(':', array_map('trim', (array) $columns));
+
         return "{$table}:{$column}$suffix";
     }
 
@@ -547,7 +556,7 @@ trait MigrationTrait
          * @var \yii\db\IndexConstraint $index
          */
         foreach (SchemaHelper::findNonUniqueIndexes($this->db, $this->expandTablePrefix($table)) as $index) {
-            if ($index->columnNames === (array)$column) {
+            if ($index->columnNames === (array) $column) {
                 $this->dropIndex($index->name, $table);
             }
         }
@@ -556,12 +565,13 @@ trait MigrationTrait
     /**
      * @param $table
      * @param $column
+     *
      * @throws \yii\db\Exception
      */
     public function dropForeignKeyByColumn($table, $column)
     {
         foreach (SchemaHelper::findTableForeignKeys($this->db, $table) as $key => $index) {
-            if ($index->columnNames === (array)$column) {
+            if ($index->columnNames === (array) $column) {
                 $this->dropForeignKey($key, $table);
             }
         }

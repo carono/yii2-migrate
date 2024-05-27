@@ -10,6 +10,6 @@ class CompanyFixture extends ActiveFixture
     public $modelClass = Company::class;
 
     public $depends = [
-        UserFixture::class
+        UserFixture::class,
     ];
 }

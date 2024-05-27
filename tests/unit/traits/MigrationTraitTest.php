@@ -29,6 +29,7 @@ class MigrationTraitTest extends \Codeception\Test\Unit
 
     /**
      * @param $name
+     *
      * @return \ReflectionMethod
      */
     public function getProtectedMethod($name)
@@ -36,6 +37,7 @@ class MigrationTraitTest extends \Codeception\Test\Unit
         $class = new \ReflectionClass(Migration::class);
         $method = $class->getMethod($name);
         $method->setAccessible(true);
+
         return $method;
     }
 
@@ -89,7 +91,7 @@ class MigrationTraitTest extends \Codeception\Test\Unit
         $method = 'getTableOptionsFromArray';
         $array = [
             \Yii::$app->db->driverName => 'EXPECT TABLE OPTIONS',
-            'other-driver' => 'NON-EXPECT TABLE OPTIONS'
+            'other-driver'             => 'NON-EXPECT TABLE OPTIONS',
         ];
         $this->assertSame('EXPECT TABLE OPTIONS', $this->invokeArgs($method, [$array, '']));
     }

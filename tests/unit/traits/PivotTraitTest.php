@@ -35,6 +35,7 @@ class PivotTraitTest extends \Codeception\Test\Unit
     /**
      * @param $name
      * @param $className
+     *
      * @return \ReflectionMethod
      */
     public function getProtectedMethod($name, $className)
@@ -42,6 +43,7 @@ class PivotTraitTest extends \Codeception\Test\Unit
         $class = new \ReflectionClass($className);
         $method = $class->getMethod($name);
         $method->setAccessible(true);
+
         return $method;
     }
 
@@ -53,8 +55,8 @@ class PivotTraitTest extends \Codeception\Test\Unit
     public function _fixtures()
     {
         return [
-            'user' => UserFixture::class,
-            'company' => CompanyFixture::class
+            'user'    => UserFixture::class,
+            'company' => CompanyFixture::class,
         ];
     }
 
@@ -65,7 +67,6 @@ class PivotTraitTest extends \Codeception\Test\Unit
         $user4 = $this->tester->grabUser('user4');
         $user5 = $this->tester->grabUser('user5');
         $company = $this->tester->grabCompany('company1');
-
 
         $company->addPivot($user2, PvCompanyDirector::class);
         $company->addPivot($user3, PvCompanyDirector::class);
@@ -91,7 +92,7 @@ class PivotTraitTest extends \Codeception\Test\Unit
     public function testAddPivots()
     {
         /**
-         * @var PvCompanyDirector $pv
+         * @var PvCompanyDirector                       $pv
          * @var \tests\yii2migrate\fixtures\UserFixture $user1
          */
         $this->addCompanyPivots();
@@ -125,13 +126,11 @@ class PivotTraitTest extends \Codeception\Test\Unit
         $this->assertSame($pv->hire_at, '2000-01-01 00:00:00');
     }
 
-
     public function testAddExistedPivot()
     {
         /**
          * @var PvCompanyDirector $pv
          */
-
         $user = $this->tester->grabUser('user1');
         $company = $this->tester->grabCompany('company1');
         $company->addPivot($user, PvCompanyDirector::class, ['hire_at' => '2000-01-01 00:00:00']);
@@ -372,9 +371,9 @@ class PivotTraitTest extends \Codeception\Test\Unit
         $this->assertSame([['model' => $user2, 'attributes' => []]], $user1->getStoragePivots(PvUserParent::class));
         $this->assertSame([
             [
-                'model' => $company1,
-                'attributes' => []
-            ]
+                'model'      => $company1,
+                'attributes' => [],
+            ],
         ], $user1->getStoragePivots(PvCompanyDirector::class));
     }
 
@@ -389,9 +388,9 @@ class PivotTraitTest extends \Codeception\Test\Unit
         $this->assertSame([['model' => $user2, 'attributes' => []]], $user1->getStoragePivots(PvUserParent::class));
         $this->assertSame([
             [
-                'model' => $company1,
-                'attributes' => []
-            ]
+                'model'      => $company1,
+                'attributes' => [],
+            ],
         ], $user1->getStoragePivots(PvCompanyDirector::class));
     }
 

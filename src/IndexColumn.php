@@ -1,8 +1,6 @@
 <?php
 
-
 namespace carono\yii2migrate;
-
 
 class IndexColumn
 {
@@ -19,56 +17,67 @@ class IndexColumn
     public function length($value)
     {
         $this->_length = $value;
+
         return $this;
     }
 
     /**
      * @param $migrate
+     *
      * @return $this
      */
     public function setMigrate($migrate)
     {
         $this->migrate = $migrate;
+
         return $this;
     }
 
     /**
      * @param bool $value
+     *
      * @return $this
      */
     public function unique($value = true)
     {
         $this->_unique = $value;
+
         return $this;
     }
 
     /**
      * @param $name
+     *
      * @return $this
      */
     public function name($name)
     {
         $this->_name = $name;
+
         return $this;
     }
 
     /**
      * @param array $columns
+     *
      * @return IndexColumn
      */
     public function columns($columns)
     {
         $this->_columns = $columns;
+
         return $this;
     }
 
     /**
      * @param $table
+     *
      * @return $this
      */
     public function table($table)
     {
         $this->_table = $table;
+
         return $this;
     }
 
@@ -106,6 +115,7 @@ class IndexColumn
         } else {
             $name = $this->_name;
         }
+
         return $name;
     }
 

@@ -22,26 +22,26 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
         $this->migration = $migrate = new Migration(['db' => \Yii::$app->db]);
         \Yii::$app->db->tablePrefix = 'trait_';
         $migrate->createTable('{{%photo}}', [
-            'id' => $migrate->integer(),
+            'id'   => $migrate->integer(),
             'name' => $migrate->string(),
         ]);
         $migrate->createTable('{{%department}}', [
-            'id' => $migrate->primaryKey(),
+            'id'   => $migrate->primaryKey(),
             'name' => $migrate->string(),
         ]);
         $migrate->createTable('{{%user}}', [
-            'id' => $migrate->primaryKey(),
-            'name' => $migrate->string(),
-            'login' => $migrate->string(),
-            'company_id' => $migrate->integer(),
-            'department_id' => $migrate->foreignKey('{{%department}}')
+            'id'            => $migrate->primaryKey(),
+            'name'          => $migrate->string(),
+            'login'         => $migrate->string(),
+            'company_id'    => $migrate->integer(),
+            'department_id' => $migrate->foreignKey('{{%department}}'),
         ]);
         $migrate->createTable('{{%company}}', [
-            'id' => $migrate->primaryKey(),
+            'id'   => $migrate->primaryKey(),
             'name' => $migrate->string(),
         ]);
         $migrate->createTable('{{%pv_department}}', [
-            'company_id' => $migrate->primaryKey(),
+            'company_id'    => $migrate->primaryKey(),
             'department_id' => $migrate->primaryKey(),
         ]);
     }
@@ -58,6 +58,7 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
 
     /**
      * @param $name
+     *
      * @return \ReflectionMethod
      */
     public function getProtectedMethod($name)
@@ -65,6 +66,7 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
         $class = new \ReflectionClass(Migration::class);
         $method = $class->getMethod($name);
         $method->setAccessible(true);
+
         return $method;
     }
 
@@ -75,6 +77,7 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
 
     /**
      * @param $params
+     *
      * @return Migration|object
      */
     public function createMigration($params)
@@ -82,7 +85,7 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
         return $this->make(Migration::class, ['db' => \Yii::$app->db] + $params);
     }
 
-//testing
+    //testing
     public function testCreateIndexDefault()
     {
         $this->migration->createIndex('index-name', '{{%user}}', ['name', 'login']);
@@ -228,14 +231,14 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
          */
         $newTables = [
             '{{%test_table1}}' => [
-                'id' => $this->migration->primaryKey(),
-                'name' => $this->migration->string()
+                'id'   => $this->migration->primaryKey(),
+                'name' => $this->migration->string(),
             ],
         ];
         $object = $this->createMigration([
             'newTables' => function () use ($newTables) {
                 return $newTables;
-            }
+            },
         ]);
         $this->assertNull(\Yii::$app->db->getTableSchema('{{%test_table1}}'));
         $object->upNewTables();
@@ -249,18 +252,18 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
     {
         $newTables = [
             '{{%test_table1}}' => [
-                'id' => $this->migration->primaryKey(),
-                'name' => $this->migration->string()
+                'id'   => $this->migration->primaryKey(),
+                'name' => $this->migration->string(),
             ],
             '{{%test_table2}}' => [
-                'id' => $this->migration->primaryKey(),
-                'table1_id' => $this->migration->foreignKey('{{%test_table1}}')
+                'id'        => $this->migration->primaryKey(),
+                'table1_id' => $this->migration->foreignKey('{{%test_table1}}'),
             ],
         ];
         $object = $this->createMigration([
             'newTables' => function () use ($newTables) {
                 return $newTables;
-            }
+            },
         ]);
         $this->tester->assertTableNotExist('{{%test_table1}}');
         $this->tester->assertTableNotExist('{{%test_table2}}');
@@ -281,15 +284,15 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
         }
         $newTables = [
             '{{%test_table1}}' => [
-                'id' => $this->migration->primaryKey(),
-                'name' => $this->migration->string(),
-                '@tableOptions' => 'CHARACTER SET utf8 COLLATE utf8_general_ci ENGINE=InnoDB'
+                'id'            => $this->migration->primaryKey(),
+                'name'          => $this->migration->string(),
+                '@tableOptions' => 'CHARACTER SET utf8 COLLATE utf8_general_ci ENGINE=InnoDB',
             ],
         ];
         $object = $this->createMigration([
             'newTables' => function () use ($newTables) {
                 return $newTables;
-            }
+            },
         ]);
         $this->tester->assertTableNotExist('{{%test_table1}}');
 
@@ -309,15 +312,15 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
         }
         $newTables = [
             '{{%test_table1}}' => [
-                'id' => $this->migration->primaryKey(),
-                'name' => $this->migration->string(),
-                '@tableOptions' => 'CHARACTER SET utf8 COLLATE utf8_general_ci ENGINE=MyISAM'
+                'id'            => $this->migration->primaryKey(),
+                'name'          => $this->migration->string(),
+                '@tableOptions' => 'CHARACTER SET utf8 COLLATE utf8_general_ci ENGINE=MyISAM',
             ],
         ];
         $object = $this->createMigration([
             'newTables' => function () use ($newTables) {
                 return $newTables;
-            }
+            },
         ]);
         $this->tester->assertTableNotExist('{{%test_table1}}');
 
@@ -334,18 +337,18 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
     {
         $newTables = [
             '{{%test_table1}}' => [
-                'id' => $this->migration->primaryKey(),
-                'name' => $this->migration->string()
+                'id'   => $this->migration->primaryKey(),
+                'name' => $this->migration->string(),
             ],
             '{{%test_table2}}' => [
-                'id' => $this->migration->primaryKey(),
-                'pivots' => $this->migration->pivot('{{%test_table1}}')->tableName('{{%pivots}}')
+                'id'     => $this->migration->primaryKey(),
+                'pivots' => $this->migration->pivot('{{%test_table1}}')->tableName('{{%pivots}}'),
             ],
         ];
         $object = $this->createMigration([
             'newTables' => function () use ($newTables) {
                 return $newTables;
-            }
+            },
         ]);
         $this->tester->assertTableNotExist('{{%test_table1}}');
         $this->tester->assertTableNotExist('{{%test_table2}}');
@@ -364,7 +367,7 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
     {
         $newColumns = [
             '{{%user}}' => [
-                'surname' => $this->migration->string()
+                'surname' => $this->migration->string(),
             ],
             '{{%company}}' => [
                 'address' => $this->migration->string(),
@@ -373,7 +376,7 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
         $object = $this->createMigration([
             'newColumns' => function () use ($newColumns) {
                 return $newColumns;
-            }
+            },
         ]);
         $this->tester->assertColumnNotExist('{{%user}}', 'surname');
         $this->tester->assertColumnNotExist('{{%company}}', 'address');
@@ -390,13 +393,13 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
     {
         $newColumns = [
             '{{%user}}' => [
-                'sub_company_id' => $this->migration->foreignKey('{{%company}}')
+                'sub_company_id' => $this->migration->foreignKey('{{%company}}'),
             ],
         ];
         $object = $this->createMigration([
             'newColumns' => function () use ($newColumns) {
                 return $newColumns;
-            }
+            },
         ]);
         $this->tester->assertColumnNotExist('{{%user}}', 'sub_company_id');
         $this->tester->assertForeignKeyNotExist('{{%user}}', 'sub_company_id');
@@ -412,13 +415,13 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
     {
         $newColumns = [
             '{{%user}}' => [
-                'pivots' => $this->migration->pivot('{{%company}}')->tableName('{{%pivots}}')
+                'pivots' => $this->migration->pivot('{{%company}}')->tableName('{{%pivots}}'),
             ],
         ];
         $object = $this->createMigration([
             'newColumns' => function () use ($newColumns) {
                 return $newColumns;
-            }
+            },
         ]);
         $this->tester->assertTableNotExist('{{%pivots}}');
         $object->upNewColumns();
@@ -431,13 +434,13 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
     {
         $newColumns = [
             '{{%user}}' => [
-                'pivots' => $this->migration->pivot('{{%user}}')->tableName('{{%pivots}}')
+                'pivots' => $this->migration->pivot('{{%user}}')->tableName('{{%pivots}}'),
             ],
         ];
         $object = $this->createMigration([
             'newColumns' => function () use ($newColumns) {
                 return $newColumns;
-            }
+            },
         ]);
         $this->tester->assertTableNotExist('{{%pivots}}');
         $object->upNewColumns();
@@ -451,13 +454,13 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
         $newIndex = [
             '{{%user}}' => [
                 $this->migration->index(['name']),
-                $this->migration->index(['login'])->unique(true)
+                $this->migration->index(['login'])->unique(true),
             ],
         ];
         $object = $this->createMigration([
             'newIndex' => function () use ($newIndex) {
                 return $newIndex;
-            }
+            },
         ]);
         $this->tester->assertIndexByColumnsNotExist('{{%user}}', ['name']);
         $this->tester->assertUniqueIndexByColumnsNotExist('{{%user}}', ['login']);
@@ -478,7 +481,7 @@ class MigrationTraitBaseTest extends \Codeception\Test\Unit
         $object = $this->createMigration([
             'newIndex' => function () use ($newIndex) {
                 return $newIndex;
-            }
+            },
         ]);
         $this->tester->assertIndexByColumnsNotExist('{{%user}}', ['name']);
         $this->tester->assertUniqueIndexByColumnsNotExist('{{%user}}', ['login']);
